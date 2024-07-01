@@ -1,7 +1,7 @@
-defmodule Mdc.Core.DocTreeTest do
+defmodule Nc.Core.DocTreeTest do
   use ExUnit.Case
 
-  alias Mdc.Core.DocTree
+  alias Nc.Core.DocTree
 
   test "tree_to_string" do
     node = {20, %{
@@ -15,21 +15,21 @@ defmodule Mdc.Core.DocTreeTest do
     assert DocTree.tree_to_string(node) == "12345678900987654321asdfghjklasdfghjkl"
   end
 
-  test "check_node_split1" do
-    split = DocTree.check_node("123456789012345678901234567890")
+  test "fix_nodes_split1" do
+    split = DocTree.fix_nodes("123456789012345678901234567890")
 
     assert DocTree.is_internal?(split)
     assert DocTree.get_val(split) == 15
     assert DocTree.tree_to_string(split) == "123456789012345678901234567890"
   end
 
-  test "check_node_split2" do
+  test "fix_nodes_split2" do
     node = {20, %{
       0 => "12345678901234567890",
       1 => "123456789012345678901234567890"
     }}
 
-    split = DocTree.check_node(node)
+    split = DocTree.fix_nodes(node)
 
     assert DocTree.is_internal?(split)
     assert DocTree.get_val(DocTree.get_right(split)) == 15
@@ -37,19 +37,19 @@ defmodule Mdc.Core.DocTreeTest do
     assert DocTree.tree_to_string(split) == "12345678901234567890123456789012345678901234567890"
   end
 
-  test "check_node_merge1" do
+  test "fix_nodes_merge1" do
     node = {10, %{
       0 => "1234567890",
       1 => "1234567890",
     }}
 
-    merge = DocTree.check_node(node)
+    merge = DocTree.fix_nodes(node)
 
     assert !DocTree.is_internal?(merge)
     assert DocTree.tree_to_string(merge) == "12345678901234567890"
   end
 
-  test "check_node_merge2" do
+  test "fix_nodes_merge2" do
     node = {10, %{
       0 => "1234567890",
       1 => {20, %{
@@ -58,7 +58,7 @@ defmodule Mdc.Core.DocTreeTest do
       }}
     }}
 
-    merge = DocTree.check_node(node)
+    merge = DocTree.fix_nodes(node)
 
     assert DocTree.is_internal?(merge)
     assert !DocTree.is_internal?(DocTree.get_right(merge))
@@ -108,7 +108,7 @@ defmodule Mdc.Core.DocTreeTest do
       }}
     }}
 
-    {new_tree, diff} = DocTree.insert(tree, 30, "55555")
+    new_tree = DocTree.insert(tree, 30, "55555")
 
     assert new_tree == correct_tree
     assert DocTree.tree_to_string(correct_tree) == "1234567890123456789012345678905555512345678901234567890"
@@ -155,7 +155,7 @@ defmodule Mdc.Core.DocTreeTest do
       }}
     }}
 
-    assert Mdc.Core.DocTree.restructure(tree) == {35, %{
+    assert Nc.Core.DocTree.restructure(tree) == {35, %{
       0 => {20, %{
         0 => "12345678901234567890",
         1 => "123456789012345"

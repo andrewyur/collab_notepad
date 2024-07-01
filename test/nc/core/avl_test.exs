@@ -1,4 +1,4 @@
-defmodule Mdc.Core.AvlTest do
+defmodule Nc.Core.AvlTest do
   use ExUnit.Case
 
   @left { :z, %{
@@ -67,70 +67,70 @@ defmodule Mdc.Core.AvlTest do
       }}
 
   test "rotate_left" do
-    assert Mdc.Core.Avl.rotate_left(@right) == @left
+    assert Nc.Core.Avl.rotate_left(@right) == @left
   end
 
   test "rotate_right" do
-    assert Mdc.Core.Avl.rotate_right(@left) == @right
+    assert Nc.Core.Avl.rotate_right(@left) == @right
   end
 
   test "rotate_left_right" do
-    assert Mdc.Core.Avl.rotate_left_right(@right_left) == @balanced
+    assert Nc.Core.Avl.rotate_left_right(@right_left) == @balanced
   end
 
   test "rotate_right_left" do
-    assert Mdc.Core.Avl.rotate_right_left(@left_right) == @balanced
+    assert Nc.Core.Avl.rotate_right_left(@left_right) == @balanced
   end
 
   test "categorize_balanced" do
-    assert Mdc.Core.Avl.categorize(@balanced) == :balanced
+    assert Nc.Core.Avl.categorize(@balanced) == :balanced
   end
 
   test "categorize_left" do
-    assert Mdc.Core.Avl.categorize(@left) == :balanced
+    assert Nc.Core.Avl.categorize(@left) == :balanced
   end
 
   test "categorize_right" do
-    assert Mdc.Core.Avl.categorize(@right) == :balanced
+    assert Nc.Core.Avl.categorize(@right) == :balanced
   end
 
   test "categorize_left_left" do
-    assert Mdc.Core.Avl.categorize(@left_left) == :left_left
+    assert Nc.Core.Avl.categorize(@left_left) == :left_left
   end
 
   test "categorize_right_right" do
-    assert Mdc.Core.Avl.categorize(@right_right) == :right_right
+    assert Nc.Core.Avl.categorize(@right_right) == :right_right
   end
 
   test "categorize_left_right" do
-    assert Mdc.Core.Avl.categorize(@left_right) == :left_right
+    assert Nc.Core.Avl.categorize(@left_right) == :left_right
   end
 
   test "categorize_right_left" do
-    assert Mdc.Core.Avl.categorize(@right_left) == :right_left
+    assert Nc.Core.Avl.categorize(@right_left) == :right_left
   end
 
   test "balance_left" do
-    assert Mdc.Core.Avl.balance(@left) == @left
+    assert Nc.Core.Avl.balance(@left) == @left
   end
 
   test "balance_right" do
-    assert Mdc.Core.Avl.balance(@right) == @right
+    assert Nc.Core.Avl.balance(@right) == @right
   end
 
   test "balance_balanced" do
-    assert Mdc.Core.Avl.balance(@balanced) == @balanced
+    assert Nc.Core.Avl.balance(@balanced) == @balanced
   end
 
   test "balance_right_right" do
-    assert Mdc.Core.Avl.balance(@right_right) == @balanced
+    assert Nc.Core.Avl.balance(@right_right) == @balanced
   end
 
   test "balance_right_left" do
-    assert Mdc.Core.Avl.balance(@right_left) == @balanced
+    assert Nc.Core.Avl.balance(@right_left) == @balanced
   end
 
   test "balance_left_right" do
-    assert Mdc.Core.Avl.balance(@left_right) == @balanced
+    assert Nc.Core.Avl.balance(@left_right) == @balanced
   end
 end

@@ -1,4 +1,4 @@
-defmodule Mdc.Core.Avl do
+defmodule Nc.Core.Avl do
   # AVL tree functionality
 
   def height(node) do
@@ -153,7 +153,7 @@ defmodule Mdc.Core.Avl do
       end
 
     if check_children do
-      Mdc.Core.DocTree.apply_to_children(tree, &balance/1)
+      Nc.Core.DocTree.apply_to_children(tree, &balance/1)
     else
       tree
     end
