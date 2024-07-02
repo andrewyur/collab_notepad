@@ -17,9 +17,9 @@ defmodule Nc.Core.DocTree do
   @type t() :: internal() | leaf()
 
   @type internal() :: {
-    non_neg_integer(),
-    %{ required(0) => t(), required(1) => t() }
-  }
+          non_neg_integer(),
+          %{required(0) => t(), required(1) => t()}
+        }
 
   @type leaf() :: String.t()
 
@@ -45,15 +45,17 @@ defmodule Nc.Core.DocTree do
     cond do
       is_bitstring(tree) ->
         tree
+
       is_bitstring(get_left(tree)) && is_bitstring(get_right(tree)) ->
         merge_internal(tree)
+
       true ->
         tree_to_string(get_left(tree)) <> tree_to_string(get_right(tree))
     end
   end
 
   @spec create_node(non_neg_integer(), t(), t()) :: internal()
-  def create_node(val, left, right), do: {val, %{ 0=> left, 1 => right }}
+  def create_node(val, left, right), do: {val, %{0 => left, 1 => right}}
 
   @spec is_internal?(t()) :: boolean()
   def is_internal?(n), do: !is_bitstring(n)
@@ -69,10 +71,11 @@ defmodule Nc.Core.DocTree do
 
   @spec apply_to_children(internal(), (t() -> t())) :: internal()
   def apply_to_children({v, map}, fun) do
-    {v, %{
-      0 => fun.(Map.fetch!(map, 0)),
-      1 => fun.(Map.fetch!(map, 1))
-    }}
+    {v,
+     %{
+       0 => fun.(Map.fetch!(map, 0)),
+       1 => fun.(Map.fetch!(map, 1))
+     }}
   end
 
   # text manipulation
@@ -86,11 +89,12 @@ defmodule Nc.Core.DocTree do
     tree
   end
 
-  @spec insert_p(t(), non_neg_integer(), String.t()) :: { t(), non_neg_integer() }
+  @spec insert_p(t(), non_neg_integer(), String.t()) :: {t(), non_neg_integer()}
   # this has to be public for the tests :(
   def insert_p(tree, index, text) do
     if is_internal?(tree) do
       tree_val = get_val(tree)
+
       if index > tree_val do
         {new_node, diff} = insert_p(get_right(tree), index - tree_val, text)
 
@@ -98,7 +102,7 @@ defmodule Nc.Core.DocTree do
       else
         {new_node, diff} = insert_p(get_left(tree), index, text)
 
-        {create_node(tree_val + diff, new_node, get_right(tree)), diff }
+        {create_node(tree_val + diff, new_node, get_right(tree)), diff}
       end
     else
       {front, back} = String.split_at(tree, index)
@@ -119,11 +123,11 @@ defmodule Nc.Core.DocTree do
         create_node(tree_val, get_left(tree), new_node)
       else
         if index + amount > tree_val do
-          diff = (index + amount) - tree_val
+          diff = index + amount - tree_val
           new_left = delete(get_left(tree), index, amount - diff)
           new_right = delete(get_right(tree), 0, diff)
 
-          create_node(tree_val - (amount - diff), new_left, new_right )
+          create_node(tree_val - (amount - diff), new_left, new_right)
         else
           new_node = delete(get_left(tree), index, amount)
 
@@ -132,7 +136,7 @@ defmodule Nc.Core.DocTree do
       end
     else
       {front, rest} = String.split_at(tree, index)
-      {_ , back} = String.split_at(rest, amount)
+      {_, back} = String.split_at(rest, amount)
       front <> back
     end
   end
@@ -160,7 +164,8 @@ defmodule Nc.Core.DocTree do
       right = get_right(node)
       new_node = apply_to_children(node, &fix_nodes/1)
 
-      if is_bitstring(left) && is_bitstring(right) && String.length(left) + String.length(right) <= @chunk_size do
+      if is_bitstring(left) && is_bitstring(right) &&
+           String.length(left) + String.length(right) <= @chunk_size do
         merge_internal(new_node)
       else
         new_node
@@ -187,19 +192,19 @@ defmodule Nc.Core.DocTree do
 
   @spec restructure(t()) :: t()
   def restructure(tree) do
-    {new_tree, _} =
-
     # split & combine chunks where necessary
-    fix_nodes(tree)
-    #|> IO.inspect(label: "check")
+    {new_tree, _} =
+      fix_nodes(tree)
+      # |> IO.inspect(label: "check")
 
-    # balance the tree
-    |> Nc.Core.Avl.balance()
-    #|> IO.inspect(label: "balance")
+      # balance the tree
+      |> Nc.Core.Avl.balance()
+      # |> IO.inspect(label: "balance")
 
-    # recalculate index values
-    |> recalc_vals()
-    #|> IO.inspect(label: "vals")
+      # recalculate index values
+      |> recalc_vals()
+
+    # |> IO.inspect(label: "vals")
 
     new_tree
   end
@@ -211,7 +216,7 @@ defmodule Nc.Core.DocTree do
 
       {max(max_left, max_right), min(min_left, min_right)}
     else
-      {String.length(tree),String.length(tree)}
+      {String.length(tree), String.length(tree)}
     end
   end
 
@@ -230,7 +235,7 @@ defmodule Nc.Core.DocTree do
   @spec restructure_if_necessary(t()) :: t()
   def restructure_if_necessary(tree) do
     {max_size, min_size} = eval_leaf_size(tree)
-    {max_height, min_height } = eval_tree_height(tree)
+    {max_height, min_height} = eval_tree_height(tree)
 
     if max_size > min_size * 2 || max_height > min_height * 2 do
       restructure(tree)

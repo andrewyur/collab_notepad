@@ -4,10 +4,12 @@ defmodule Nc.Core.Avl do
   def height(node) do
     case node do
       {_, map} ->
-        1 + max(
-          height(Map.fetch!(map, 0)),
-          height(Map.fetch!(map, 1))
-        )
+        1 +
+          max(
+            height(Map.fetch!(map, 0)),
+            height(Map.fetch!(map, 1))
+          )
+
       _string ->
         0
     end
@@ -17,6 +19,7 @@ defmodule Nc.Core.Avl do
     case node do
       {_, map} ->
         height(Map.fetch!(map, 1)) - height(Map.fetch!(map, 0))
+
       _string ->
         0
     end
@@ -39,10 +42,11 @@ defmodule Nc.Core.Avl do
     t23 = Map.fetch!(z_tree, 0)
     t4 = Map.fetch!(z_tree, 1)
 
-    {z, %{
-      0 => { x, %{0 => t1, 1 => t23}},
-      1 => t4
-    }}
+    {z,
+     %{
+       0 => {x, %{0 => t1, 1 => t23}},
+       1 => t4
+     }}
   end
 
   # call on this node  ->  Z               X
@@ -62,10 +66,11 @@ defmodule Nc.Core.Avl do
     t1 = Map.fetch!(x_tree, 0)
     t23 = Map.fetch!(x_tree, 1)
 
-    {x, %{
-      0 => t1,
-      1 => { z, %{0 => t23, 1 => t4}}
-    }}
+    {x,
+     %{
+       0 => t1,
+       1 => {z, %{0 => t23, 1 => t4}}
+     }}
   end
 
   # call on this node  ->  X                       Y
@@ -117,7 +122,6 @@ defmodule Nc.Core.Avl do
   # :right_left
   # :left_right
   def categorize(tree) do
-
     balance_factor = balance_factor(tree)
 
     {_, map} = tree
@@ -127,12 +131,14 @@ defmodule Nc.Core.Avl do
     cond do
       abs(balance_factor) < 2 ->
         :balanced
+
       balance_factor <= -2 ->
         if balance_factor(left_subtree) < 0 do
           :left_left
         else
           :left_right
         end
+
       balance_factor >= 2 ->
         if balance_factor(right_subtree) > 0 do
           :right_right
