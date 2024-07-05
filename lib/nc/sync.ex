@@ -21,20 +21,31 @@ defmodule Nc.Sync do
               position :: non_neg_integer(),
               amount :: non_neg_integer()
             }
+          | nil
 
   @spec reconcile(change(), change()) :: {change(), change()}
 
+  # this function must be commutative!
   def reconcile({:insert, position_1, text_1}, {:insert, position_2, text_2}) do
-    if position_1 > position_2 do
-      {
-        {:insert, position_1 + String.length(text_2), text_1},
-        {:insert, position_2, text_2}
-      }
-    else
-      {
-        {:insert, position_1, text_1},
-        {:insert, position_2 + String.length(text_1), text_2}
-      }
+    cond do
+      position_1 > position_2 || (position_1 == position_2 && text_1 > text_2) ->
+        {
+          {:insert, position_1 + String.length(text_2), text_1},
+          {:insert, position_2, text_2}
+        }
+
+      position_1 < position_2 || (position_1 == position_2 && text_1 < text_2) ->
+        {
+          {:insert, position_1, text_1},
+          {:insert, position_2 + String.length(text_1), text_2}
+        }
+
+      # the case for identical inputs
+      # this happens a lot more frequently in the tests than it will in real life
+      # will need to implement some sort of unique id for changes to deal with this properly
+      # a client id attached to every change could work, as the two inputs will always be from different sources
+      true ->
+        {nil, nil}
     end
   end
 
@@ -48,7 +59,7 @@ defmodule Nc.Sync do
         }
       else
         {
-          {:insert, position_1, ""},
+          nil,
           {:delete, position_2, amount_2 + String.length(text_1)}
         }
       end
@@ -95,13 +106,13 @@ defmodule Nc.Sync do
       left_1 <= left_2 && right_1 >= right_2 ->
         {
           {:delete, position_1, amount_1 - amount_2},
-          {:delete, position_2, 0}
+          nil
         }
 
       # right "eclipses" left
-      left_1 > left_2 && right_1 < right_2 ->
+      left_1 >= left_2 && right_1 <= right_2 ->
         {
-          {:delete, position_1, 0},
+          nil,
           {:delete, position_2, amount_2 - amount_1}
         }
 
@@ -112,6 +123,20 @@ defmodule Nc.Sync do
           {:delete, min(position_2, position_1), amount_2 - overlap_area}
         }
     end
+  end
+
+  def reconcile(nil, change) do
+    {
+      nil,
+      change
+    }
+  end
+
+  def reconcile(change, nil) do
+    {
+      change,
+      nil
+    }
   end
 
   @spec clamp(change(), String.t()) :: change()

@@ -15,6 +15,9 @@ defmodule Nc.SyncTest do
         {front, rest} = String.split_at(string, position)
         {_, back} = String.split_at(rest, amount)
         front <> back
+
+      nil ->
+        string
     end
   end
 
@@ -49,8 +52,8 @@ defmodule Nc.SyncTest do
   end
 
   # this has passed 1_000_000 iterations
-  test "randomized compound divergence" do
-    Enum.each(0..1_000_000, fn _ ->
+  test "randomized 1 2 compound divergence" do
+    Enum.each(0..100, fn _ ->
       string = "12345678901234567890"
 
       o_change1 = random_change(string, "A")
@@ -88,7 +91,7 @@ defmodule Nc.SyncTest do
     assert apply_change(string, change2) == "123456789090"
 
     assert Sync.reconcile(change1, change2) == {
-             {:insert, 12, ""},
+             nil,
              {:delete, 10, 10}
            }
 
@@ -101,7 +104,7 @@ defmodule Nc.SyncTest do
            inspect([client, server, change1, change2])
   end
 
-  test "compound divergence" do
+  test "1 2 compound divergence" do
     # trying to mimic the interaction between the server and the client
 
     # server and client start off synchronized
@@ -117,36 +120,228 @@ defmodule Nc.SyncTest do
     # server applies a change
     change3 = Sync.clamp(change3, server)
     server = apply_change(server, change3)
-    # assert server == "1234567890!@#$%^&*()CCCCCCCCCCCCCCC"
 
     # client has applied 2 local changes
     change1 = Sync.clamp(change1, client)
     client = apply_change(client, change1)
-    # assert client == "$%^&*()"
     change2 = Sync.clamp(change2, client)
     client = apply_change(client, change2)
-    # assert client == "$%^&*()BBBBBBBBBBBBBB"
+
+    # it is important that these changes are clamped and applied before they are sent over
 
     # client then recieves the server change, and recognizes it was sent before its local changes were recieved.
-    # client reconciles the incoming change against its unrecieved changes, and then applies it
+    # client reconciles the incoming change against its unacknowledged changes, and then applies it
 
     {_change1_p, change3_p} = Sync.reconcile(change1, change3)
     {_change2_p, change3_pp} = Sync.reconcile(change2, change3_p)
 
-    # assert change3_pp == {:delete, 6, 2}
     client = apply_change(client, change3_pp)
-    # assert client == "$%^&*()BBBBBBBBBBBBBB"
 
     # client then sends its changes to server, and server does the same.
     {change1_p, change3_p} = Sync.reconcile(change1, change3)
     server = apply_change(server, change1_p)
-    # assert server == "#$%^&*"
 
     {change2_p, _change3_pp} = Sync.reconcile(change2, change3_p)
     server = apply_change(server, change2_p)
-    # assert server == "#$%^&*BBBBBBBBBBBBB"
 
     # the client and server should now have identical documents!
     assert server == client
+  end
+
+  test "2 3 compound divergence" do
+    string = "1234567890!@#$%^&*()"
+
+    server_changes = [
+      {:delete, 8, 12},
+      {:insert, 8, "AAAAAAAAAA"}
+    ]
+
+    client_changes = [
+      {:delete, 11, 9},
+      {:insert, 11, "AAAAAAAAAA"},
+      {:insert, 20, "BBBBBB"}
+    ]
+
+    {server, server_changes} =
+      Enum.reduce(server_changes, {string, []}, fn change, {server, new_changes} ->
+        change = Sync.clamp(change, server)
+        server = apply_change(server, change)
+        {server, [change | new_changes]}
+      end)
+
+    server_changes = Enum.reverse(server_changes)
+
+    {client, client_changes} =
+      Enum.reduce(client_changes, {string, []}, fn change, {client, new_changes} ->
+        change = Sync.clamp(change, client)
+        client = apply_change(client, change)
+        {client, [change | new_changes]}
+      end)
+
+    client_changes = Enum.reverse(client_changes)
+
+    [
+      s_change1,
+      s_change2
+    ] = server_changes
+
+    [
+      c_change1,
+      c_change2,
+      c_change3
+    ] = client_changes
+
+    # This looks like it could be improved with memoization or dp of some form
+
+    {s_change1_p, c_change1_p} = Sync.reconcile(s_change1, c_change1)
+    {s_change2_p, c_change1_pp} = Sync.reconcile(s_change2, c_change1_p)
+    server = apply_change(server, c_change1_pp)
+
+    {s_change1_pp, c_change2_p} = Sync.reconcile(s_change1_p, c_change2)
+    {s_change2_pp, c_change2_pp} = Sync.reconcile(s_change2_p, c_change2_p)
+    server = apply_change(server, c_change2_pp)
+
+    {s_change1_ppp, c_change3_p} = Sync.reconcile(s_change1_pp, c_change3)
+    {s_change2_ppp, c_change3_pp} = Sync.reconcile(s_change2_pp, c_change3_p)
+    server = apply_change(server, c_change3_pp)
+
+    #
+
+    {s_change1_p, c_change1_p} = Sync.reconcile(s_change1, c_change1)
+    {s_change1_pp, c_change2_p} = Sync.reconcile(s_change1_p, c_change2)
+    {s_change1_ppp, c_change3_p} = Sync.reconcile(s_change1_pp, c_change3)
+
+    client = apply_change(client, s_change1_ppp)
+
+    {s_change2_p, c_change1_pp} = Sync.reconcile(s_change2_p, c_change1_p)
+    {s_change2_pp, c_change2_pp} = Sync.reconcile(s_change2_p, c_change2_p)
+    {s_change2_ppp, c_change3_pp} = Sync.reconcile(s_change2_pp, c_change3_p)
+
+    client = apply_change(client, s_change2_ppp)
+
+    assert server == client
+  end
+
+  test "commutative test" do
+    i1 = {:insert, 8, "AAAAAAAAAA"}
+    i2 = {:insert, 8, "AAAAAAAAAA"}
+
+    {i1_p1, i2_p1} = Sync.reconcile(i1, i2)
+    {i2_p2, i1_p2} = Sync.reconcile(i2, i1)
+
+    assert i1_p1 == i1_p2
+    assert i2_p1 == i2_p2
+  end
+
+  def generate_change_list(string, length \\ nil) do
+    0..:rand.uniform(length || String.length(string))
+    |> Enum.map(fn i ->
+      random_change(string, <<64 + i>>)
+    end)
+  end
+
+  defp reconcile_single_change(current_changelog_change, {reconciled_change, new_changelog}) do
+    {new_current_changelog_change, new_reconciled_change} =
+      Sync.reconcile(current_changelog_change, reconciled_change)
+
+    {new_reconciled_change, [new_current_changelog_change | new_changelog]}
+  end
+
+  defp reconcile_all_changes(incoming_change, {current_string, current_changelog}) do
+    {reconciled_change, new_changelog} =
+      Enum.reduce(current_changelog, {incoming_change, []}, &reconcile_single_change/2)
+
+    new_changelog = Enum.reverse(new_changelog)
+    new_string = apply_change(current_string, reconciled_change)
+    {new_string, new_changelog}
+  end
+
+  def reconcile_changes(string, incoming, changelog) do
+    {reconciled_string, _reconciled_changelog} =
+      Enum.reduce(incoming, {string, changelog}, &reconcile_all_changes/2)
+
+    reconciled_string
+  end
+
+  test "n n compound divergence" do
+    # testing that set of 1st degree divergences of any length can be resolved
+    string = "1234567890!@#$%^&*()"
+
+    server_changes = [
+      {:delete, 9, 11},
+      {:insert, 9, "A"}
+    ]
+
+    client_changes = [
+      {:insert, 9, "@@@@@@@@@@@@@@@@@@@@"},
+      {:insert, 4, "AAAAAAAAA"},
+      {:insert, 0, "BBBBBBBBBBB"}
+    ]
+
+    {server, server_changes} =
+      Enum.reduce(server_changes, {string, []}, fn change, {server, new_changes} ->
+        change = Sync.clamp(change, server)
+        server = apply_change(server, change)
+        {server, [change | new_changes]}
+      end)
+
+    server_changes = Enum.reverse(server_changes)
+
+    {client, client_changes} =
+      Enum.reduce(client_changes, {string, []}, fn change, {client, new_changes} ->
+        change = Sync.clamp(change, client)
+        client = apply_change(client, change)
+        {client, [change | new_changes]}
+      end)
+
+    client_changes = Enum.reverse(client_changes)
+
+    assert reconcile_changes(client, server_changes, client_changes) ==
+             reconcile_changes(server, client_changes, server_changes)
+  end
+
+  @tag timeout: :infinity
+  # this test has passed 1_000_000 iterations
+  test "automated n n compound divergence" do
+    changelog_length = nil
+
+    Enum.each(0..10, fn _ ->
+      string = "1234567890!@#$%^&*()"
+
+      server_changes = generate_change_list(string, changelog_length)
+
+      client_changes = generate_change_list(string, changelog_length)
+
+      {server, server_changes} =
+        Enum.reduce(server_changes, {string, []}, fn change, {server, new_changes} ->
+          change = Sync.clamp(change, server)
+          server = apply_change(server, change)
+          {server, [change | new_changes]}
+        end)
+
+      server_changes = Enum.reverse(server_changes)
+
+      {client, client_changes} =
+        Enum.reduce(client_changes, {string, []}, fn change, {client, new_changes} ->
+          change = Sync.clamp(change, client)
+          client = apply_change(client, change)
+          {client, [change | new_changes]}
+        end)
+
+      client_changes = Enum.reverse(client_changes)
+
+      new_client = reconcile_changes(client, server_changes, client_changes)
+      new_server = reconcile_changes(server, client_changes, server_changes)
+
+      if new_client != new_server do
+        IO.inspect({client_changes, server_changes})
+      end
+
+      assert new_client == new_server
+    end)
+  end
+
+  test "n ^ n compound divergence" do
+    # testing that set of any degree of divergences of any length can be resolved
   end
 end

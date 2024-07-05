@@ -6,7 +6,7 @@
 #   use GenServer
 
 #   alias Nc.Core.DocTree
-#   alias Nc.Sync.Reconcile
+#   alias Nc.Sync
 
 #   @type state() :: %{
 #     document: DocTree.t(),
@@ -17,13 +17,13 @@
 
 #   @type change_request() :: {
 #     :change,
-#     Reconcile.change(),
+#     Sync.change(),
 #     non_neg_integer()
 #   }
 
-#   @type change_log() :: {
-#     Reconcile.change(),
-#     non_neg_integer()
+#   @type change_log() :: %{
+#     change: Sync.change(),
+#     last_synced: non_neg_integer()
 #   }
 
 #   def start_link(text) do
@@ -57,6 +57,8 @@
 
 #   def transform_change(change, last_synced, changelog) do
 #     # traverse back into the changelog until you find the point at which the server and the client are synced
+
+#     Enum.take_while(changelog, &(&1.last_synced > last_synced))
 
 #     #
 #   end
