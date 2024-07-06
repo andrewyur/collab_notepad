@@ -14,71 +14,73 @@ defmodule Nc.Sync do
           {
             :insert,
             position :: non_neg_integer(),
-            text :: String.t()
+            text :: String.t(),
+            from :: non_neg_integer()
           }
           | {
               :delete,
               position :: non_neg_integer(),
-              amount :: non_neg_integer()
+              amount :: non_neg_integer(),
+              from :: non_neg_integer()
             }
           | nil
 
   @spec reconcile(change(), change()) :: {change(), change()}
 
   # this function must be commutative!
-  def reconcile({:insert, position_1, text_1}, {:insert, position_2, text_2}) do
+  def reconcile({:insert, position_1, text_1, from_1}, {:insert, position_2, text_2, from_2}) do
     cond do
-      position_1 > position_2 || (position_1 == position_2 && text_1 > text_2) ->
+      position_1 > position_2 || (position_1 == position_2 && text_1 > text_2) ||
+          (position_1 == position_2 && text_1 == text_2 && from_1 > from_2) ->
         {
-          {:insert, position_1 + String.length(text_2), text_1},
-          {:insert, position_2, text_2}
+          {:insert, position_1 + String.length(text_2), text_1, from_1},
+          {:insert, position_2, text_2, from_2}
         }
 
-      position_1 < position_2 || (position_1 == position_2 && text_1 < text_2) ->
+      position_1 < position_2 || (position_1 == position_2 && text_1 < text_2) ||
+          (position_1 == position_2 && text_1 == text_2 && from_1 < from_2) ->
         {
-          {:insert, position_1, text_1},
-          {:insert, position_2 + String.length(text_1), text_2}
+          {:insert, position_1, text_1, from_1},
+          {:insert, position_2 + String.length(text_1), text_2, from_2}
         }
 
       # the case for identical inputs
-      # this happens a lot more frequently in the tests than it will in real life
-      # will need to implement some sort of unique id for changes to deal with this properly
-      # a client id attached to every change could work, as the two inputs will always be from different sources
+      # this will never happen because the two inputs will always be from different sources
       true ->
         {nil, nil}
     end
   end
 
   # for simplicity's sake, if an insert is inside a delete, it is not done
-  def reconcile({:insert, position_1, text_1}, {:delete, position_2, amount_2}) do
+  def reconcile({:insert, position_1, text_1, from_1}, {:delete, position_2, amount_2, from_2}) do
     if position_1 > position_2 do
       if position_1 >= position_2 + amount_2 do
         {
-          {:insert, position_1 - amount_2, text_1},
-          {:delete, position_2, amount_2}
+          {:insert, position_1 - amount_2, text_1, from_1},
+          {:delete, position_2, amount_2, from_2}
         }
       else
         {
           nil,
-          {:delete, position_2, amount_2 + String.length(text_1)}
+          {:delete, position_2, amount_2 + String.length(text_1), from_2}
         }
       end
     else
       {
-        {:insert, position_1, text_1},
-        {:delete, position_2 + String.length(text_1), amount_2}
+        {:insert, position_1, text_1, from_1},
+        {:delete, position_2 + String.length(text_1), amount_2, from_2}
       }
     end
   end
 
-  def reconcile({:delete, position_1, amount_1}, {:insert, position_2, text_2}) do
+  def reconcile({:delete, position_1, amount_1, from_1}, {:insert, position_2, text_2, from_2}) do
     {insert_prime, delete_prime} =
-      reconcile({:insert, position_2, text_2}, {:delete, position_1, amount_1})
+      reconcile({:insert, position_2, text_2, from_2}, {:delete, position_1, amount_1, from_1})
 
     {delete_prime, insert_prime}
   end
 
-  def reconcile({:delete, position_1, amount_1}, {:delete, position_2, amount_2}) do
+  def reconcile({:delete, position_1, amount_1, from_1}, {:delete, position_2, amount_2, from_2}) do
     left_1 = position_1
     right_1 = position_1 + amount_1
     left_2 = position_2
@@ -92,20 +94,20 @@ defmodule Nc.Sync do
       overlap_area <= 0 ->
         if position_1 > position_2 do
           {
-            {:delete, position_1 - amount_2, amount_1},
-            {:delete, position_2, amount_2}
+            {:delete, position_1 - amount_2, amount_1, from_1},
+            {:delete, position_2, amount_2, from_2}
           }
         else
           {
-            {:delete, position_1, amount_1},
-            {:delete, position_2 - amount_1, amount_2}
+            {:delete, position_1, amount_1, from_1},
+            {:delete, position_2 - amount_1, amount_2, from_2}
           }
         end
 
       # left "eclipses" right
       left_1 <= left_2 && right_1 >= right_2 ->
         {
-          {:delete, position_1, amount_1 - amount_2},
+          {:delete, position_1, amount_1 - amount_2, from_1},
           nil
         }
 
@@ -113,14 +115,14 @@ defmodule Nc.Sync do
       left_1 >= left_2 && right_1 <= right_2 ->
         {
           nil,
-          {:delete, position_2, amount_2 - amount_1}
+          {:delete, position_2, amount_2 - amount_1, from_2}
         }
 
       # overlap on one side
       left_1 > left_2 || right_1 < right_2 ->
         {
-          {:delete, min(position_2, position_1), amount_1 - overlap_area},
-          {:delete, min(position_2, position_1), amount_2 - overlap_area}
+          {:delete, min(position_2, position_1), amount_1 - overlap_area, from_1},
+          {:delete, min(position_2, position_1), amount_2 - overlap_area, from_2}
         }
     end
   end
@@ -144,14 +146,14 @@ defmodule Nc.Sync do
     string_length = String.length(string)
 
     case change do
-      {:delete, position, amount} ->
+      {:delete, position, amount, from} ->
         position = position |> min(string_length) |> max(0)
         amount = amount |> min(string_length - position) |> max(0)
-        {:delete, position, amount}
+        {:delete, position, amount, from}
 
-      {:insert, position, text} ->
+      {:insert, position, text, from} ->
         position = position |> min(string_length) |> max(0)
-        {:insert, position, text}
+        {:insert, position, text, from}
     end
   end
 end

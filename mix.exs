@@ -8,7 +8,7 @@ defmodule MarkdownCollab.MixProject do
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      dialyzer: [plt_add_apps: [:ex_unit, :mix], ignore_warnings: "config/dialyzer.ignore"]
+      dialyzer: [ignore_warnings: "config/dialyzer.ignore"]
     ]
   end
 
