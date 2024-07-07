@@ -15,6 +15,12 @@ god i should have just found an OT implementation online somewhere, all i wanted
 
 OT Implemenation found! won't be completely copying this model, but adapting it to fit my current infrastructure
 
+Just got past the point at which i had to remake everything, looks like i will be able to pull and push separately, which is really nice
+
+There are a lot of moving parts and separate entities that need to be kept track of, one of the hardest things for me is finding names for everything
+
+I LOVE DEBUGGING TESTS !!!!!!
+
 ## TODO
 
 - integrate stateful clients + synchronizer

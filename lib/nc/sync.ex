@@ -45,7 +45,7 @@ defmodule Nc.Sync do
         }
 
       # the case for identical inputs
-      # this will never happen because the two inputs will always be from different sources
+      # this is actually has the benefit of cancelling out changes coming from the same source
       true ->
         {nil, nil}
     end
@@ -149,7 +149,12 @@ defmodule Nc.Sync do
       {:delete, position, amount, from} ->
         position = position |> min(string_length) |> max(0)
         amount = amount |> min(string_length - position) |> max(0)
-        {:delete, position, amount, from}
+
+        if amount <= 0 do
+          nil
+        else
+          {:delete, position, amount, from}
+        end
 
       {:insert, position, text, from} ->
         position = position |> min(string_length) |> max(0)
