@@ -51,7 +51,7 @@ defmodule Nc.Sync do
     end
   end
 
-  # for simplicity's sake, if an insert is inside a delete, it is not done
+  # for simplicity's sake, if an insert is inside a delete, it is nullified
   def reconcile({:insert, position_1, text_1, from_1}, {:delete, position_2, amount_2, from_2}) do
     if position_1 > position_2 do
       if position_1 >= position_2 + amount_2 do
@@ -160,5 +160,27 @@ defmodule Nc.Sync do
         position = position |> min(string_length) |> max(0)
         {:insert, position, text, from}
     end
+  end
+
+  def reconcile_against(incoming_list, outgoing_list) do
+    reconcile_single_change = fn outgoing_change, {incoming_change, new_outgoing_list} ->
+      {new_outgoing_change, new_incoming_change} =
+        reconcile(outgoing_change, incoming_change)
+
+      {new_incoming_change, [new_outgoing_change | new_outgoing_list]}
+    end
+
+    reconcile_all_changes = fn incoming_change, {new_incoming_list, current_outgoing_list} ->
+      {new_incoming_change, new_outgoing_list} =
+        Enum.reduce(current_outgoing_list, {incoming_change, []}, reconcile_single_change)
+
+      new_outgoing_list = Enum.reverse(new_outgoing_list)
+      {[new_incoming_change | new_incoming_list], new_outgoing_list}
+    end
+
+    {new_incoming_list, new_outgoing_list} =
+      Enum.reduce(incoming_list, {[], outgoing_list}, reconcile_all_changes)
+
+    {Enum.reverse(new_incoming_list), new_outgoing_list}
   end
 end
