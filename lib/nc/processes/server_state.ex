@@ -93,9 +93,9 @@ defmodule Nc.Processes.ServerState do
     new_clients = Map.put(new_clients, client_pid, new_client_changelog)
 
     new_changelog =
-      (changelog ++
-         Enum.zip(changes_to_apply, Stream.iterate(current_id, &(&1 + 1))))
-      |> Enum.map(fn {change, version} -> %{change: change, version: version} end)
+      changelog ++
+        (Enum.zip(changes_to_apply, Stream.iterate(current_id, &(&1 + 1)))
+         |> Enum.map(fn {change, version} -> %{change: change, version: version} end))
 
     new_current_id = Enum.count(client_changes) + current_id
 

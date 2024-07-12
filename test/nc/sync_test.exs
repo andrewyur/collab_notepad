@@ -1,35 +1,12 @@
 defmodule Nc.SyncTest do
   use ExUnit.Case, async: true
 
+  alias ElixirLS.LanguageServer.Providers.CodeAction.Helpers
   alias Nc.Sync
 
+  import Nc.Helpers
+
   # these tests are as much to help me find situations i had not expected as to find bugs in my code
-
-  def apply_change(string, change) do
-    case change do
-      {:insert, position, text, _from} ->
-        {front, back} = String.split_at(string, position)
-        front <> text <> back
-
-      {:delete, position, amount, _from} ->
-        {front, rest} = String.split_at(string, position)
-        {_, back} = String.split_at(rest, amount)
-        front <> back
-
-      nil ->
-        string
-    end
-  end
-
-  def random_change(string, letter, from) do
-    position = :rand.uniform(String.length(string) + 1) - 1
-    amount = :rand.uniform(String.length(string) + 1)
-
-    case :rand.uniform(2) do
-      1 -> {:delete, position, amount, from}
-      2 -> {:insert, position, String.duplicate(letter, amount), from}
-    end
-  end
 
   # this has passed 1_000_000 iterations
   test "randomized test" do
@@ -83,7 +60,7 @@ defmodule Nc.SyncTest do
 
   @tag timeout: :infinity
   # this test has passed 1_000_000 iterations
-  test "automated n n compound divergence" do
+  test "randomized n n compound divergence" do
     changelog_length = nil
 
     Enum.each(0..100, fn _ ->
@@ -110,56 +87,9 @@ defmodule Nc.SyncTest do
     end)
   end
 
-  def generate_change_list(string, from, length \\ nil) do
-    0..(length || :rand.uniform(String.length(string) + 1))
-    |> Enum.map(fn i ->
-      random_change(string, <<65 + Integer.mod(i, 26)>>, from)
-    end)
-  end
-
-  def apply_change_list(string, changes, to \\ nil) do
-    if to == nil do
-      Enum.reduce(changes, string, &apply_change(&2, &1))
-    else
-      Enum.reduce(changes, string, fn change, str ->
-        if change == nil || elem(change, 3) == to do
-          str
-        else
-          apply_change(str, change)
-        end
-      end)
-    end
-  end
-
-  def apply_and_clamp(string, changes) do
-    {new_string, new_changes} =
-      Enum.reduce(changes, {string, []}, fn change, {new_string, new_changes} ->
-        change = Sync.clamp(change, new_string)
-        new_string = apply_change(new_string, change)
-        {new_string, [change | new_changes]}
-      end)
-
-    {new_string, Enum.reverse(new_changes)}
-  end
-
-  def get_relevant_changes(changelog, last_synced) do
-    for {change, version} when version > last_synced <- changelog, do: change
-  end
-
-  def extend_changelog(changelog, new_changes) do
-    new_changes =
-      changelog ++
-        Enum.zip(
-          new_changes,
-          Stream.iterate(elem(List.last(changelog, {0, 0}), 1) + 1, &(&1 + 1))
-        )
-
-    {elem(List.last(new_changes), 1), new_changes}
-  end
-
   @tag timeout: :infinity
   # this test has passed 1_000_000 iterations
-  test "automated push without pull" do
+  test "randomized push without pull" do
     # test to see if a client can push changes up to the server from a stale document, and successfully sync changes afterward
     # may need to have client id baked into every change by this point so the client can differentiate its own changes from others
 
@@ -219,7 +149,7 @@ defmodule Nc.SyncTest do
 
   @tag timeout: :infinity
   # this test has passed 1_000_000 iterations
-  test "automated pull without push" do
+  test "randomized pull without push" do
     # test to see if a client can pull changes down without pushing its pending changes
 
     # this should work similarly to the push without pull test, where the client keeps a log of changes to base outdated changes off of.
@@ -288,5 +218,45 @@ defmodule Nc.SyncTest do
     # client3 is at current version
 
     # client3 makes a change
+  end
+
+  test "temp" do
+    string = "1234567890!@#$%^&*()"
+
+    # client makes a change and pushes to the server
+
+    client_change_list_1 = [{:delete, 11, 4, :client1}]
+
+    client = apply_change_list(string, client_change_list_1, :client1)
+
+    server = apply_change_list(string, client_change_list_1, :server)
+    {_, server_changelog} = extend_changelog([], client_change_list_1)
+
+    client_pending = client_change_list_1
+
+    # server makes a change
+
+    server_changes = [{:delete, 8, 8, :server}]
+    {server, server_changes} = apply_and_clamp(server, server_changes)
+    {_, server_changelog} = extend_changelog(server_changelog, server_changes)
+
+    # client makes another change and pushes to the server
+
+    client_change_list_2 = [{:insert, 13, "AAA", :client1}]
+
+    client = apply_change_list(string, client_change_list_2, :client1)
+
+    server = apply_change_list(string, client_change_list_2, :server)
+    {_, server_changelog} = extend_changelog([], client_change_list_2)
+
+    client_pending = client_pending ++ client_change_list_2
+
+    # client 1 pulls from the server
+
+    relevant_server_changes = get_relevant_changes(server_changelog, 0)
+    {new_changes, _} = Sync.reconcile_against(relevant_server_changes, client_pending)
+    client = apply_change_list(client, new_changes, :client1)
+
+    assert server == client
   end
 end

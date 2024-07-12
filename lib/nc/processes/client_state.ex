@@ -1,5 +1,8 @@
 defmodule Nc.Processes.ClientState do
   # the definition of the client state are done here, as well as all of the functions for manipulating the state
+
+  # state should not be entirely encapsulated within this module however, as that would complicate sending messages & reading
+
   alias Nc.Sync
   alias Nc.Core.DocTree
 
@@ -7,7 +10,6 @@ defmodule Nc.Processes.ClientState do
           document: DocTree.t(),
           pending: [Sync.change()],
           last_pulled: non_neg_integer(),
-          unpushed_changes: non_neg_integer(),
           server: pid()
         }
 
@@ -17,7 +19,6 @@ defmodule Nc.Processes.ClientState do
       document: doctree,
       pending: [],
       last_pulled: last_pulled,
-      unpushed_changes: 0,
       server: server_pid
     }
   end
@@ -44,11 +45,11 @@ defmodule Nc.Processes.ClientState do
     %{
       state
       | document: apply_change(state.document, change),
-        unpushed_changes: state.unpushed_changes + 1,
         pending: state.pending ++ [change]
     }
   end
 
+  @spec start_pull(t()) :: {t(), non_neg_integer()}
   def start_pull(state) do
     {
       state,
@@ -56,13 +57,12 @@ defmodule Nc.Processes.ClientState do
     }
   end
 
+  @spec recieve_pull(t(), [Sync.change()], non_neg_integer()) :: t()
   def recieve_pull(state, incoming_change_list, version) do
     {changes_to_apply, new_pending_changes} =
       Sync.reconcile_against(incoming_change_list, state.pending)
 
     new_document = apply_change_list(state.document, changes_to_apply)
-
-    new_pending_changes = Enum.take(new_pending_changes, -1 * state.unpushed_changes)
 
     %{
       state
@@ -72,13 +72,14 @@ defmodule Nc.Processes.ClientState do
     }
   end
 
+  @spec start_push(t()) :: {t(), [Sync.change()]}
   def start_push(state) do
     {
       %{
         state
-        | unpushed_changes: 0
+        | pending: []
       },
-      Enum.take(state.pending_changes, -1 * state.unpushed_changes)
+      state.pending
     }
   end
 
