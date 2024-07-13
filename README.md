@@ -23,8 +23,7 @@ I LOVE DEBUGGING TESTS !!!!!!
 
 ## TODO
 
-- integrate stateful clients + synchronizer
-  - client integration tests
+- create and test servers
 - svelte front end
 - process manager, supervisors
 - landing page, create new doc page

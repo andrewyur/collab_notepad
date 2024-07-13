@@ -86,6 +86,108 @@ defmodule Nc.Processes.StateTest do
     end)
   end
 
-  test "pull without push" do
+  @tag timeout: :infinity
+  # this test has passed 1_000_000 iterations
+  test "randomized pull without push" do
+    Enum.each(0..100, fn _ ->
+      string = "1234567890!@#$%^&*()"
+
+      server = ServerState.new(string)
+      {server, server_document, server_current_id} = ServerState.add_new_client(server, :client1)
+      {server, _, _} = ServerState.add_new_client(server, :client2)
+
+      client1 = ClientState.new(:server, server_document, server_current_id)
+      client2 = ClientState.new(:server, server_document, server_current_id)
+
+      # client1 makes a change
+
+      client1 = apply_random_changes(client1, :client1)
+
+      # client2 makes a change
+
+      client2 = apply_random_changes(client2, :client2)
+
+      # client2 pulls + pushes
+
+      {client2, client2_last_pulled} = ClientState.start_pull(client2)
+
+      {server, client2_pulled_changes, client2_current_id} =
+        ServerState.handle_pull(server, :client2, client2_last_pulled)
+
+      client2 = ClientState.recieve_pull(client2, client2_pulled_changes, client2_current_id)
+
+      {client2, client2_changes} = ClientState.start_push(client2)
+      server = ServerState.handle_push(server, :client2, client2_changes)
+
+      # client1 pulls
+
+      {client1, client1_last_pulled} = ClientState.start_pull(client1)
+
+      {server, client1_pulled_changes, client1_current_id} =
+        ServerState.handle_pull(server, :client1, client1_last_pulled)
+
+      client1 = ClientState.recieve_pull(client1, client1_pulled_changes, client1_current_id)
+
+      # client1 makes a change
+
+      client1 = apply_random_changes(client1, :client1)
+
+      # client2 makes a change
+
+      client2 = apply_random_changes(client2, :client2)
+
+      # client2 pulls + pushes
+
+      {client2, client2_last_pulled} = ClientState.start_pull(client2)
+
+      {server, client2_pulled_changes, client2_current_id} =
+        ServerState.handle_pull(server, :client2, client2_last_pulled)
+
+      client2 = ClientState.recieve_pull(client2, client2_pulled_changes, client2_current_id)
+
+      {client2, client2_changes} = ClientState.start_push(client2)
+      server = ServerState.handle_push(server, :client2, client2_changes)
+
+      # client1 pulls + pushes
+
+      {client1, client1_last_pulled} = ClientState.start_pull(client1)
+
+      {server, client1_pulled_changes, client1_current_id} =
+        ServerState.handle_pull(server, :client1, client1_last_pulled)
+
+      client1 = ClientState.recieve_pull(client1, client1_pulled_changes, client1_current_id)
+
+      {client1, client1_changes} = ClientState.start_push(client1)
+      server = ServerState.handle_push(server, :client1, client1_changes)
+
+      # client2 pulls
+
+      {client2, client2_last_pulled} = ClientState.start_pull(client2)
+
+      {server, client2_pulled_changes, client2_current_id} =
+        ServerState.handle_pull(server, :client2, client2_last_pulled)
+
+      client2 = ClientState.recieve_pull(client2, client2_pulled_changes, client2_current_id)
+
+      assert DocTree.tree_to_string(client1.document) == DocTree.tree_to_string(server.document)
+      assert DocTree.tree_to_string(client2.document) == DocTree.tree_to_string(server.document)
+    end)
+  end
+
+  test "3 way divergence" do
+    # testing that set of divergences from many clients can be resolved
+    # this will be the core functionality of this project
+
+    # client1 is at version 4
+
+    # client1 makes a change
+
+    # client2 is at version 2
+
+    # client2 makes a change
+
+    # client3 is at current version
+
+    # client3 makes a change
   end
 end

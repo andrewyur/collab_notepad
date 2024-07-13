@@ -201,23 +201,4 @@ defmodule Nc.SyncTest do
       assert server == client
     end)
   end
-
-  # this may be easier to test with everything encapsulated as a state should do the server_state & client_state modules before doing this
-
-  test "3 way divergence" do
-    # testing that set of divergences from many clients can be resolved
-    # this will be the core functionality of this project
-
-    # client1 is at version 4
-
-    # client1 makes a change
-
-    # client2 is at version 2
-
-    # client2 makes a change
-
-    # client3 is at current version
-
-    # client3 makes a change
-  end
 end

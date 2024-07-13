@@ -38,7 +38,7 @@ defmodule Nc.Processes.ClientState do
     end
   end
 
-  def apply_change_list(document, change_list) do
+  defp apply_change_list(document, change_list) do
     Enum.reduce(change_list, document, &apply_change(&2, &1))
   end
 
@@ -52,6 +52,7 @@ defmodule Nc.Processes.ClientState do
     }
   end
 
+  @spec start_pull(t()) :: {t(), non_neg_integer()}
   def start_pull(state) do
     {
       state,
@@ -59,6 +60,7 @@ defmodule Nc.Processes.ClientState do
     }
   end
 
+  @spec recieve_pull(t(), [Sync.change()], non_neg_integer()) :: t()
   def recieve_pull(state, incoming_change_list, version) do
     {changes_to_apply, new_pending_changes} =
       Sync.reconcile_against(incoming_change_list, state.pending)
@@ -75,6 +77,7 @@ defmodule Nc.Processes.ClientState do
     }
   end
 
+  @spec start_push(t()) :: {t(), [Sync.change()]}
   def start_push(state) do
     {
       %{
