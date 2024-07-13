@@ -67,8 +67,7 @@ defmodule Nc.Processes.ServerState do
     {%{
        state
        | clients: Map.put(state.clients, client_pid, [])
-     }, Enum.filter(relevant_changes, &(&1 != nil && elem(&1, 3) != client_pid)),
-     state.current_id - 1}
+     }, relevant_changes, state.current_id - 1}
   end
 
   @spec handle_push(t(), pid(), [Sync.change()]) :: t()

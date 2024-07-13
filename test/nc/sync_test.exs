@@ -1,7 +1,6 @@
 defmodule Nc.SyncTest do
   use ExUnit.Case, async: true
 
-  alias ElixirLS.LanguageServer.Providers.CodeAction.Helpers
   alias Nc.Sync
 
   import Nc.Helpers
@@ -100,6 +99,8 @@ defmodule Nc.SyncTest do
       changes_length = nil
 
       string = "1234567890!@#$%^&*()"
+
+      # client and server make changes
 
       server_changes = generate_change_list(string, :server, changes_length)
       {server, server_changes} = apply_and_clamp(string, server_changes)
@@ -218,45 +219,5 @@ defmodule Nc.SyncTest do
     # client3 is at current version
 
     # client3 makes a change
-  end
-
-  test "temp" do
-    string = "1234567890!@#$%^&*()"
-
-    # client makes a change and pushes to the server
-
-    client_change_list_1 = [{:delete, 11, 4, :client1}]
-
-    client = apply_change_list(string, client_change_list_1, :client1)
-
-    server = apply_change_list(string, client_change_list_1, :server)
-    {_, server_changelog} = extend_changelog([], client_change_list_1)
-
-    client_pending = client_change_list_1
-
-    # server makes a change
-
-    server_changes = [{:delete, 8, 8, :server}]
-    {server, server_changes} = apply_and_clamp(server, server_changes)
-    {_, server_changelog} = extend_changelog(server_changelog, server_changes)
-
-    # client makes another change and pushes to the server
-
-    client_change_list_2 = [{:insert, 13, "AAA", :client1}]
-
-    client = apply_change_list(string, client_change_list_2, :client1)
-
-    server = apply_change_list(string, client_change_list_2, :server)
-    {_, server_changelog} = extend_changelog([], client_change_list_2)
-
-    client_pending = client_pending ++ client_change_list_2
-
-    # client 1 pulls from the server
-
-    relevant_server_changes = get_relevant_changes(server_changelog, 0)
-    {new_changes, _} = Sync.reconcile_against(relevant_server_changes, client_pending)
-    client = apply_change_list(client, new_changes, :client1)
-
-    assert server == client
   end
 end
