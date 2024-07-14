@@ -9,30 +9,34 @@ defmodule Nc.Processes.Client do
 
   @spec start_link(pid()) :: {:error, any()} | {:ok, pid()}
   def start_link(server) do
-    {server_document, current_id} = GenServer.call(server, :start)
-
-    client_state = ClientState.new(server, server_document, current_id)
-
     Agent.start_link(fn ->
-      client_state
+      {server_document, current_id} = GenServer.call(server, :start)
+
+      ClientState.new(server, server_document, current_id)
     end)
   end
 
   @spec insert(pid(), non_neg_integer(), String.t()) :: :ok
   def insert(client, position, text) do
-    Agent.cast(client, &ClientState.make_change(&1, {:insert, position, text, self()}))
+    Agent.update(
+      client,
+      &ClientState.make_change(&1, {:insert, position, text, self()})
+    )
   end
 
   @spec delete(pid(), non_neg_integer(), non_neg_integer()) :: :ok
   def delete(client, position, amount) do
-    Agent.cast(client, &ClientState.make_change(&1, {:delete, position, amount, self()}))
+    Agent.update(
+      client,
+      &ClientState.make_change(&1, {:delete, position, amount, self()})
+    )
   end
 
   # these synchronization functions will happen asynchronously in the actual client, no point in doing that here though
 
   @spec push(pid()) :: :ok
   def push(client) do
-    Agent.cast(client, fn state ->
+    Agent.update(client, fn state ->
       {state, changes} = ClientState.start_push(state)
 
       GenServer.call(state.server, {:push, changes})
@@ -43,7 +47,7 @@ defmodule Nc.Processes.Client do
 
   @spec pull(pid()) :: :ok
   def pull(client) do
-    Agent.cast(client, fn state ->
+    Agent.update(client, fn state ->
       {state, last_pulled} = ClientState.start_pull(state)
 
       {pulled_changes, current_id} = GenServer.call(state.server, {:pull, last_pulled})
@@ -60,5 +64,10 @@ defmodule Nc.Processes.Client do
   @spec kill(pid()) :: :ok
   def kill(client) do
     Agent.stop(client)
+  end
+
+  @spec debug(pid()) :: ClientState.t()
+  def debug(client) do
+    Agent.get(client, & &1)
   end
 end

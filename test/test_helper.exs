@@ -17,7 +17,7 @@ defmodule Nc.Helpers do
     end
   end
 
-  def random_change(string, letter, from) do
+  def random_change(string, letter, from \\ nil) do
     position = :rand.uniform(String.length(string) + 1) - 1
     amount = :rand.uniform(String.length(string) + 1)
 

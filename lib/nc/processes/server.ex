@@ -25,6 +25,7 @@ defmodule Nc.Processes.Server do
     case request do
       :start -> handle_start(client, state)
       :read -> handle_read(state)
+      :debug -> handle_debug(state)
       {:pull, last_pulled} -> handle_pull(state, client, last_pulled)
       {:push, changes} -> handle_push(state, client, changes)
     end
@@ -36,6 +37,11 @@ defmodule Nc.Processes.Server do
     {state, document, current_id} = ServerState.add_new_client(state, from)
 
     {:reply, {document, current_id}, state}
+  end
+
+  @spec handle_debug(ServerState.t()) :: {:reply, ServerState.t(), ServerState.t()}
+  def handle_debug(state) do
+    {:reply, state, state}
   end
 
   # for testing purposes only
@@ -60,12 +66,17 @@ defmodule Nc.Processes.Server do
   end
 
   @spec read(pid()) :: String.t()
-  def read(docserver) do
-    GenServer.call(docserver, :read)
+  def read(server) do
+    GenServer.call(server, :read)
   end
 
   @spec kill(pid()) :: :ok
-  def kill(docserver) do
-    GenServer.stop(docserver)
+  def kill(server) do
+    GenServer.stop(server)
+  end
+
+  @spec debug(pid()) :: ServerState.t()
+  def debug(server) do
+    GenServer.call(server, :debug)
   end
 end

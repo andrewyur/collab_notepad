@@ -79,7 +79,7 @@ defmodule Nc.Processes.ServerState do
       clients: clients
     } = state
 
-    client_changelog = Map.get(clients, client_pid)
+    client_changelog = Map.fetch!(clients, client_pid)
 
     {changes_to_apply, new_client_changelog} =
       Sync.reconcile_against(client_changes, client_changelog)

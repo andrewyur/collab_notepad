@@ -173,21 +173,4 @@ defmodule Nc.Processes.StateTest do
       assert DocTree.tree_to_string(client2.document) == DocTree.tree_to_string(server.document)
     end)
   end
-
-  test "3 way divergence" do
-    # testing that set of divergences from many clients can be resolved
-    # this will be the core functionality of this project
-
-    # client1 is at version 4
-
-    # client1 makes a change
-
-    # client2 is at version 2
-
-    # client2 makes a change
-
-    # client3 is at current version
-
-    # client3 makes a change
-  end
 end

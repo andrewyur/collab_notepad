@@ -84,7 +84,11 @@ defmodule Nc.Processes.ClientState do
         state
         | unpushed_changes: 0
       },
-      Enum.take(state.pending, -1 * state.unpushed_changes)
+      if state.pending != [] do
+        Enum.take(state.pending, -1 * state.unpushed_changes)
+      else
+        []
+      end
     }
   end
 
