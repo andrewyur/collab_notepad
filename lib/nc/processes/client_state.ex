@@ -15,11 +15,11 @@ defmodule Nc.Processes.ClientState do
         }
 
   @spec new(pid(), DocTree.t(), non_neg_integer()) :: t()
-  def new(server_pid, doctree, last_pulled) do
+  def new(server_pid, doctree, current_id) do
     %{
       document: doctree,
       pending: [],
-      last_pulled: last_pulled,
+      last_pulled: current_id,
       unpushed_changes: 0,
       server: server_pid
     }

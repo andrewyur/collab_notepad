@@ -15,13 +15,13 @@ defmodule Nc.Sync do
             :insert,
             position :: non_neg_integer(),
             text :: String.t(),
-            from :: non_neg_integer()
+            from :: any()
           }
           | {
               :delete,
               position :: non_neg_integer(),
               amount :: non_neg_integer(),
-              from :: non_neg_integer()
+              from :: any()
             }
           | nil
 
