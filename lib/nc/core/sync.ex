@@ -1,4 +1,4 @@
-defmodule Nc.Sync do
+defmodule Nc.Core.Sync do
   # similar to the `xform` function in the jupiter OT model, but working with blocks of text instead of individual text operations
 
   # Excerpt from the paper:

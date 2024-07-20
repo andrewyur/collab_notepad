@@ -1,18 +1,18 @@
-defmodule Nc.Processes.Client do
+defmodule Nc.Workers.DummyClient do
   @moduledoc """
   this is just for internal testing, and to figure out the client logic. the end goal is for the client's state to be kept on the client
   """
 
   use Agent
 
-  alias Nc.Processes.ClientState
+  alias Nc.Workers.DummyClientState
 
   @spec start_link(pid()) :: {:error, any()} | {:ok, pid()}
   def start_link(server) do
     Agent.start_link(fn ->
       {server_document, current_id} = GenServer.call(server, :start)
 
-      ClientState.new(server, server_document, current_id)
+      DummyClientState.new(server, server_document, current_id)
     end)
   end
 
@@ -20,7 +20,7 @@ defmodule Nc.Processes.Client do
   def insert(client, position, text) do
     Agent.update(
       client,
-      &ClientState.make_change(&1, {:insert, position, text, self()})
+      &DummyClientState.make_change(&1, {:insert, position, text, self()})
     )
   end
 
@@ -28,7 +28,7 @@ defmodule Nc.Processes.Client do
   def delete(client, position, amount) do
     Agent.update(
       client,
-      &ClientState.make_change(&1, {:delete, position, amount, self()})
+      &DummyClientState.make_change(&1, {:delete, position, amount, self()})
     )
   end
 
@@ -37,7 +37,7 @@ defmodule Nc.Processes.Client do
   @spec push(pid()) :: :ok
   def push(client) do
     Agent.update(client, fn state ->
-      {state, changes} = ClientState.start_push(state)
+      {state, changes} = DummyClientState.start_push(state)
 
       GenServer.call(state.server, {:push, changes})
 
@@ -48,11 +48,11 @@ defmodule Nc.Processes.Client do
   @spec pull(pid()) :: :ok
   def pull(client) do
     Agent.update(client, fn state ->
-      {state, last_pulled} = ClientState.start_pull(state)
+      {state, last_pulled} = DummyClientState.start_pull(state)
 
       {pulled_changes, current_id} = GenServer.call(state.server, {:pull, last_pulled})
 
-      ClientState.recieve_pull(state, pulled_changes, current_id)
+      DummyClientState.recieve_pull(state, pulled_changes, current_id)
     end)
   end
 
@@ -66,7 +66,7 @@ defmodule Nc.Processes.Client do
     Agent.stop(client)
   end
 
-  @spec debug(pid()) :: ClientState.t()
+  @spec debug(pid()) :: DummyClientState.t()
   def debug(client) do
     Agent.get(client, & &1)
   end

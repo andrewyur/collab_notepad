@@ -23,10 +23,15 @@ I LOVE DEBUGGING TESTS !!!!!!
 
 ## TODO
 
-- create and test servers
-- svelte front end
-- process manager, supervisors
-- landing page, create new doc page
+- move client processes outside of the server architecture
+  - this entails setting up stateful client proxy processes to handle interactions with the document server
+  - clients should be reffered to by a UUID and not a pid
+  - client should communicate with the server as a whole and not with individual document processes
+- refactor tests to fit project structure (and figure out how to make helper functions work properly with the ls)
+- set up webserver, transition client process into a web client
+  - web client should be written in svelte
+  - communication may have to be through websocket from the start (can web browsers recieve http requests?)
+- use ecto to store data?
 
 ## Resources
 

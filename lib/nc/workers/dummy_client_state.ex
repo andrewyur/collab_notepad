@@ -1,9 +1,9 @@
-defmodule Nc.Processes.ClientState do
+defmodule Nc.Workers.DummyClientState do
   # the definition of the client state are done here, as well as all of the functions for manipulating the state
 
   # state should not be entirely encapsulated within this module however, as that would complicate sending messages & reading
 
-  alias Nc.Sync
+  alias Nc.Core.Sync
   alias Nc.Core.DocTree
 
   @type t() :: %{
