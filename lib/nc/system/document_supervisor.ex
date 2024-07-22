@@ -1,7 +1,7 @@
 defmodule Nc.System.DocumentSupervisor do
   use DynamicSupervisor
 
-  def start_link do
+  def start_link(_arg) do
     DynamicSupervisor.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
