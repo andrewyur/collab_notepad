@@ -6,21 +6,19 @@ defmodule Nc.System.Router do
 
   plug(Plug.Logger, log: :debug)
 
+  # this will need a filter at some point before production
   plug(Plug.Static, at: "/", from: "client/dist")
   plug(:match)
   plug(:dispatch)
 
-  get "/hello" do
-    send_resp(conn, 200, "HI")
-  end
-
-  get "/hi" do
-    send_resp(conn, 200, "HELLO")
-  end
-
-  get "/test" do
+  get "page1" do
     conn = put_resp_content_type(conn, "text/html")
-    send_file(conn, 200, "client/dist/index.html")
+    send_file(conn, 200, "client/dist/page1.html")
+  end
+
+  get "page2" do
+    conn = put_resp_content_type(conn, "text/html")
+    send_file(conn, 200, "client/dist/page2.html")
   end
 
   match _ do
