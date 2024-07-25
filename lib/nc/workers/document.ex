@@ -10,16 +10,12 @@ defmodule Nc.Workers.Document do
   alias Nc.Workers.DocumentState
   alias Nc.System.DocumentRegistry
 
-  def start_new({id, text}) do
-    GenServer.start_link(__MODULE__, text, name: DocumentRegistry.via_tuple(id))
+  def start_link(id) do
+    GenServer.start_link(__MODULE__, nil, name: DocumentRegistry.via_tuple(id))
   end
 
-  def init(text) do
-    {:ok, nil, {:continue, text}}
-  end
-
-  def handle_continue(text, _state) do
-    {:noreply, DocumentState.new(text)}
+  def init(_init_arg) do
+    {:ok, DocumentState.new("")}
   end
 
   def handle_call(request, from, state) do

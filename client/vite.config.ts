@@ -9,14 +9,14 @@ export default defineConfig({
     createHtmlPlugin({
       pages: [
         {
-          entry: "src/pages/page1.ts",
-          template: "page1.html",
-          filename: "page1.html",
+          entry: "src/pages/document.ts",
+          template: "document.html",
+          filename: "document.html",
         },
         {
-          entry: "src/pages/page2.ts",
-          template: "page2.html",
-          filename: "page2.html",
+          entry: "src/pages/home.ts",
+          template: "home.html",
+          filename: "home.html",
         },
       ],
     }),
@@ -24,8 +24,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        page1: "src/page1/page1.ts",
-        page2: "src/page2/page2.ts",
+        document: "src/document/document.ts",
+        home: "src/home/home.ts",
       },
     },
   },

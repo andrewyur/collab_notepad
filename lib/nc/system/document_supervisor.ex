@@ -11,6 +11,6 @@ defmodule Nc.System.DocumentSupervisor do
 
   def new_document do
     document_id = UUID.uuid4()
-    DynamicSupervisor.start_child(__MODULE__, {Nc.Workers.Server, {document_id, ""}})
+    {DynamicSupervisor.start_child(__MODULE__, {Nc.Workers.Document, document_id}), document_id}
   end
 end
