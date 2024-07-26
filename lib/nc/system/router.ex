@@ -6,7 +6,7 @@ defmodule Nc.System.Router do
   use Plug.Router
   use Plug.Debugger
 
-  # plug(Plug.Logger, log: :debug)
+  plug(Plug.Logger, log: :debug)
 
   plug(:match)
 
@@ -22,25 +22,28 @@ defmodule Nc.System.Router do
   end
 
   get "/new" do
-    case DocumentSupervisor.new_document() do
-      {{:ok, _pid}, document_id} ->
-        send_resp(
-          conn,
-          200,
-          Poison.encode!(%{
-            id: document_id
-          })
-        )
+    conn = put_resp_content_type(conn, "application/json")
 
-      {{:error, reason}, _document_id} ->
-        send_resp(
-          conn,
-          500,
-          Poison.encode!(%{
-            "reason" => reason
-          })
-        )
-    end
+    conn =
+      case DocumentSupervisor.new_document() do
+        {{:ok, _pid}, document_id} ->
+          send_resp(
+            conn,
+            200,
+            Poison.encode!(%{
+              id: document_id
+            })
+          )
+
+        {{:error, reason}, _document_id} ->
+          send_resp(
+            conn,
+            500,
+            Poison.encode!(%{
+              "reason" => reason
+            })
+          )
+      end
 
     halt(conn)
   end
@@ -53,7 +56,9 @@ defmodule Nc.System.Router do
   end
 
   get "/document/:id/edit" do
-    WebSockAdapter.upgrade(conn, Nc.Workers.ClientHandler, id, [])
+    conn
+    |> WebSockAdapter.upgrade(Nc.Workers.ClientHandler, id, timeout: 6_000_000)
+    |> halt()
   end
 
   match _ do
