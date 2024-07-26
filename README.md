@@ -13,6 +13,7 @@ Using elixir & bandit for the back end, and svelte for the front end
   - this entails setting up stateful client proxy processes to handle interactions with the document server
   - clients should be reffered to by a UUID and not a pid
   - client should communicate with the server as a whole and not with individual document processes
+- add a client exit protocol in the document process, which terminates the document after the last client has left
 - refactor tests to fit project structure (and figure out how to make helper functions work properly with the ls)
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
 - use ecto to persist documents?

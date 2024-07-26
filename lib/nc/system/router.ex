@@ -6,7 +6,7 @@ defmodule Nc.System.Router do
   use Plug.Router
   use Plug.Debugger
 
-  plug(Plug.Logger, log: :debug)
+  # plug(Plug.Logger, log: :debug)
 
   plug(:match)
 
@@ -18,6 +18,7 @@ defmodule Nc.System.Router do
     conn
     |> put_resp_content_type("text/html")
     |> send_file(200, "client/dist/home.html")
+    |> halt()
   end
 
   get "/new" do
@@ -40,9 +41,25 @@ defmodule Nc.System.Router do
           })
         )
     end
+
+    halt(conn)
+  end
+
+  get "/document/:id" do
+    conn
+    |> put_resp_content_type("text/html")
+    |> send_file(200, "client/dist/document.html")
+    |> halt()
+  end
+
+  get "/document/:id/edit" do
+    WebSockAdapter.upgrade(conn, Nc.Workers.ClientHandler, id, [])
   end
 
   match _ do
-    send_resp(conn, 404, "Not Found")
+    conn
+    |> put_resp_content_type("text/plain")
+    |> send_resp(404, "Not Found")
+    |> halt()
   end
 end
