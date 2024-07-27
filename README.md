@@ -6,13 +6,8 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
-- set up webserver, transition client process into a web client
-  - web client should be written in svelte
-  - communication may have to be through websocket from the start (can web browsers recieve http requests?)
-- move dummy client into the web client
-  - this entails setting up stateful client proxy processes to handle interactions with the document server
-  - clients should be reffered to by a UUID and not a pid
-  - client should communicate with the server as a whole and not with individual document processes
+- set up the editor using quill (textarea does not work well for this)
+- add type annotations for everything
 - add a client exit protocol in the document process, which terminates the document after the last client has left
 - use session to track which documents the user currently has open
 - refactor tests to fit project structure (and figure out how to make helper functions work properly with the ls)

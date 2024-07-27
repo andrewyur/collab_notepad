@@ -1,27 +1,33 @@
 <script lang="ts">
+  import WebSocketClient from "websocket-async";
+
   type windowState = "Connecting" | "Success" | "Failed";
   let currentState: windowState = "Connecting";
 
-  // attempt to create a new websocket with server
-  const websocketUrl = `ws://${window.location.host}${window.location.pathname}/edit`;
-  const websocket = new WebSocket(websocketUrl);
+  const websocket = new WebSocketClient();
 
-  // if successful, pass websocket to the document editor, and display in the page
+  (async () => {
+    // attempt to create a new websocket with server
+    const websocketUrl = `ws://${window.location.host}${window.location.pathname}/edit`;
+    await websocket.connect(websocketUrl);
 
-  // if not successful, display error to the user
+    // if successful, pass websocket to the document editor, and display in the page
 
-  websocket.addEventListener("message", (e) => {
-    alert(e.data);
-  });
+    // if not successful, display error to the user
 
-  websocket.addEventListener("error", (e) => {
-    currentState = "Failed";
-    alert("An Error Occured when Connecting to the Server!");
-  });
+    websocket._socket.addEventListener("message", (e) => {
+      alert(e.data);
+    });
 
-  websocket.addEventListener("close", (e) => {
-    alert(`Connection Closed: ${e.reason}`);
-  });
+    websocket._socket.addEventListener("error", (e) => {
+      currentState = "Failed";
+      alert("An Error Occured when Connecting to the Server!");
+    });
+
+    websocket._socket.addEventListener("close", (e) => {
+      alert(`Connection Closed: ${e.reason}`);
+    });
+  })();
 </script>
 
 <main>

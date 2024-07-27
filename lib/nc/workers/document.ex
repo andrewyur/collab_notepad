@@ -22,7 +22,7 @@ defmodule Nc.Workers.Document do
     client = elem(from, 0)
 
     case request do
-      :start -> handle_start(client, state)
+      :start -> handle_start(state, client)
       :read -> handle_read(state)
       :debug -> handle_debug(state)
       {:pull, last_pulled} -> handle_pull(state, client, last_pulled)
@@ -30,12 +30,12 @@ defmodule Nc.Workers.Document do
     end
   end
 
-  @spec handle_start(pid(), DocumentState.t()) ::
-          {:reply, {DocTree.t(), non_neg_integer()}, DocumentState.t()}
-  def handle_start(from, state) do
+  @spec handle_start(DocumentState.t(), pid()) ::
+          {:reply, {:start, DocTree.t(), non_neg_integer()}, DocumentState.t()}
+  def handle_start(state, from) do
     {state, document, current_id} = DocumentState.add_new_client(state, from)
 
-    {:reply, {document, current_id}, state}
+    {:reply, {:start, document, current_id}, state}
   end
 
   @spec handle_debug(DocumentState.t()) :: {:reply, DocumentState.t(), DocumentState.t()}
@@ -50,18 +50,19 @@ defmodule Nc.Workers.Document do
   end
 
   @spec handle_pull(DocumentState.t(), pid(), non_neg_integer()) ::
-          {:reply, {[Sync.change()], non_neg_integer()}, DocumentState.t()}
+          {:reply, {:pull, [Sync.change()], non_neg_integer()}, DocumentState.t()}
   def handle_pull(state, from, last_pulled) do
     {state, pulled_changes, current_id} = DocumentState.handle_pull(state, from, last_pulled)
 
-    {:reply, {pulled_changes, current_id}, state}
+    {:reply, {:pull, pulled_changes, current_id}, state}
   end
 
-  @spec handle_push(DocumentState.t(), pid(), [Sync.change()]) :: {:reply, :ok, DocumentState.t()}
+  @spec handle_push(DocumentState.t(), pid(), [Sync.change()]) ::
+          {:reply, :push, DocumentState.t()}
   def handle_push(state, from, changes) do
     state = DocumentState.handle_push(state, from, changes)
 
-    {:reply, :ok, state}
+    {:reply, :push, state}
   end
 
   @spec read(pid()) :: String.t()

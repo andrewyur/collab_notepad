@@ -14,9 +14,11 @@
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
-    "moduleDetection": "force"
+    "moduleDetection": "force",
+    "strict": true
   },
   "types": ["node"],
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  // cannot figure out why the linter shows this line as an error, it is very annoying
   "references": [{ "path": "./tsconfig.node.json" }]
 }
