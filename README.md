@@ -6,11 +6,11 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
-- set up the editor using quill (textarea does not work well for this)
-- add type annotations for everything
+- make sure type annotations are added for everything
+- set up tests for the clientside code
+- refactor tests to fit project structure (and figure out how to make helper functions work properly with the ls)
 - add a client exit protocol in the document process, which terminates the document after the last client has left
 - use session to track which documents the user currently has open
-- refactor tests to fit project structure (and figure out how to make helper functions work properly with the ls)
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
 - use ecto to persist documents?
 
@@ -33,3 +33,8 @@ Using elixir & bandit for the back end, and svelte for the front end
 - There are a lot of moving parts and separate entities that need to be kept track of, one of the hardest things for me is finding names for everything
 - I LOVE DEBUGGING TESTS !!!!!!
 - setting up a web server is looking to be very tedious...
+- I originally wanted to implement the text editor with html textarea and compose the changes from scratch, but it turns out textarea lacks a (widely supported) way to track the user's cursor position. The only options for me were to:
+  - use textarea, but manually track keydown and click events and try to infer the cursor position based off of those (very hacky)
+  - create an editor from scratch, using raw `<p>` elements to display text, and tracking events to detect changes (a lot of work)
+  - use a library that has already done the above for me
+- I ended up choosing the third option, and going with the Quill library. It turns out this library also has an operational transform implementation, but oh well. what can i do...

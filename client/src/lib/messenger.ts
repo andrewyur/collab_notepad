@@ -1,52 +1,53 @@
-import { randomUUID, type UUID } from "crypto";
 import type WebSocketClient from "websocket-async";
+import type { UUID } from "crypto";
 
-type Change =
-  | {
-      type: "insert";
-      position: Number;
-      text: String;
-      from: String;
-    }
-  | {
-      type: "delete";
-      position: Number;
-      amount: Number;
-      from: String;
-    }
-  | null;
+export type Insert = {
+  type: "insert";
+  position: number;
+  text: string;
+  from: string;
+};
+
+export type Delete = {
+  type: "delete";
+  position: number;
+  amount: number;
+  from: string;
+};
+
+export type Change = Insert | Delete | undefined;
 
 type StartMessage = "start";
 type StartResponse = {
   type: "start";
-  document: String;
-  currentId: Number;
+  document: string;
+  currentId: number;
 };
 
 type PushMessage = {
   type: "push";
-  changes: [Change];
+  changes: Change[];
 };
 type PushResponse = "push";
 
 type PullMessage = {
   type: "pull";
-  lastPulled: Number;
+  lastPulled: number;
 };
 type PullResponse = {
   type: "pull";
-  pulledChanges: [Change];
-  currentId: Number;
+  pulledChanges: Change[];
+  currentId: number;
 };
 
 type Message = StartMessage | PullMessage | PushMessage;
 
 type Response = StartResponse | PullResponse | PushResponse;
 
-export class Messager {
+export class Messenger {
   websocket: WebSocketClient;
   clientId: UUID;
-  lastPulled: Number;
+  lastPulled: number;
 
   // probably could have gotten away with using fetch requests for this instead of websocket
   #sendMessage = async (message: Message): Promise<Response> => {
@@ -59,13 +60,13 @@ export class Messager {
 
   constructor(websocket: WebSocketClient) {
     this.websocket = websocket;
-    this.clientId = randomUUID();
+    this.clientId = self.crypto.randomUUID();
 
     // pulling before initializing will break something, but it shouldn't be able to happen if i do everything properly
     this.lastPulled = -1;
   }
 
-  async init(): Promise<String> {
+  async init(): Promise<string> {
     let response = (await this.#sendMessage("start")) as StartResponse;
 
     this.lastPulled = response.currentId;
@@ -73,7 +74,7 @@ export class Messager {
     return response.document;
   }
 
-  async push(changes: [Change]): Promise<void> {
+  async sendPush(changes: Change[]): Promise<void> {
     let message: PushMessage = {
       type: "push",
       changes,
@@ -82,7 +83,7 @@ export class Messager {
     await this.#sendMessage(message);
   }
 
-  async pull(): Promise<[Change]> {
+  async sendPull(): Promise<Change[]> {
     let message: PullMessage = {
       type: "pull",
       lastPulled: this.lastPulled,

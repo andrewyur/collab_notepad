@@ -24,11 +24,8 @@ defmodule Nc.Workers.ClientHandler do
   # I would much prefer to not have to do this manually, but there are not a lot of options at the moment
   def json_to_message(json_string) do
     case Poison.decode!(json_string) do
-      %{
-        "type" => "start",
-        "id" => id
-      } ->
-        {:start, id}
+      "start" ->
+        :start
 
       %{
         "type" => "push",
