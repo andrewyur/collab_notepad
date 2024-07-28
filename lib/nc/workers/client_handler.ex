@@ -21,6 +21,12 @@ defmodule Nc.Workers.ClientHandler do
     end
   end
 
+  def terminate(reason, pid) do
+    if reason == :remote do
+      GenServer.call(pid, :end)
+    end
+  end
+
   # I would much prefer to not have to do this manually, but there are not a lot of options at the moment
   def json_to_message(json_string) do
     case Poison.decode!(json_string) do

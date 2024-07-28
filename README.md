@@ -6,10 +6,19 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
+- fully flesh out the web client
+  - home bar
+    - button to back to the home screen
+    - button to go share the document link
+    - button to open the document in another tab
+    - (?) button to link back to my portfolio page
+  - Editor configuration
+    - style it as close as possible to windows notepad
+    - add options as a div to the side
+- figure out how to make helper functions work properly with the ls
+- refactor server tests to fit project structure
 - make sure type annotations are added for everything
-- set up tests for the clientside code
-- refactor tests to fit project structure (and figure out how to make helper functions work properly with the ls)
-- add a client exit protocol in the document process, which terminates the document after the last client has left
+- add client tests (maybe?)
 - use session to track which documents the user currently has open
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
 - use ecto to persist documents?

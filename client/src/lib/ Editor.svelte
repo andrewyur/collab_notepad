@@ -15,6 +15,8 @@
   let unpushed = 0;
   let uncondensed = new Delta();
 
+  let autoSyncHandle: ReturnType<typeof setInterval> | null = null;
+
   const delta_to_changes = (delta: Delta): Array<Change> => {
     // quill has a lot of capabilities, all we want is the ability to edit plain text and track the cursor...
 
@@ -26,7 +28,6 @@
         pos += op.retain as number;
       }
       if ("insert" in op) {
-        pos += (op.insert as string).length;
         changes = [
           ...changes,
           {
@@ -36,6 +37,7 @@
             from: messenger.clientId,
           },
         ];
+        pos += (op.insert as string).length;
       }
       if ("delete" in op) {
         changes = [
@@ -75,14 +77,25 @@
     });
 
     const condense_changes = () => {
+      // console.log("uncondensed: ", uncondensed);
+
       const changes_uncondensed = delta_to_changes(uncondensed);
       unpushed += changes_uncondensed.length;
       pending = [...pending, ...changes_uncondensed];
       uncondensed = new Delta();
+
+      // console.log("uncondensed changes: ", changes_uncondensed);
+      // console.log("pending: ", pending);
     };
 
     push = async () => {
       condense_changes();
+
+      // console.log(
+      //   "unpushed: ",
+      //   pending.slice(-1 * unpushed, pending.length + 1)
+      // );
+
       await messenger.sendPush(
         pending.slice(-1 * unpushed, pending.length + 1)
       );
@@ -97,6 +110,8 @@
       const changeObj = reconcileAgainst(newChanges, pending);
       const changes_to_apply = changeObj.new_incoming_list;
       pending = changeObj.new_outgoing_list;
+
+      // console.log(changeObj);
 
       changes_to_apply.forEach((change) => {
         switch (change?.type) {
@@ -114,9 +129,23 @@
       });
     };
   });
+
+  const handleCheckbox = (e: MouseEvent) => {
+    if ((e.target as HTMLInputElement).checked) {
+      autoSyncHandle = setInterval(async () => {
+        await pull();
+        await push();
+      }, 500);
+    } else {
+      if (autoSyncHandle) clearInterval(autoSyncHandle);
+    }
+  };
 </script>
 
 <div id="editor"></div>
 <button on:click={pull}>Pull</button>
 <button on:click={push}>Push</button>
-<!-- <checkbox>Auto</checkbox> -->
+<label>
+  Automatic Synchronization
+  <input type="checkbox" on:click={handleCheckbox} />
+</label>

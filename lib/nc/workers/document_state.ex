@@ -57,6 +57,13 @@ defmodule Nc.Workers.DocumentState do
     }
   end
 
+  def remove_client(state, client_pid) do
+    %{
+      state
+      | clients: Map.delete(state.clients, client_pid)
+    }
+  end
+
   # assumes client is up to date or will transform the changes
   @spec handle_pull(t(), pid(), non_neg_integer()) :: {t(), [Sync.change()], non_neg_integer()}
   def handle_pull(state, client_pid, last_pulled) do
