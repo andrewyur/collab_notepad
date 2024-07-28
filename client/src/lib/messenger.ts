@@ -1,5 +1,5 @@
-import type WebSocketClient from "websocket-async";
 import type { UUID } from "crypto";
+import { Reciever } from "./reciever";
 
 export type Insert = {
   type: "insert";
@@ -44,54 +44,51 @@ type Message = StartMessage | PullMessage | PushMessage;
 
 type Response = StartResponse | PullResponse | PushResponse;
 
-export class Messenger {
-  websocket: WebSocketClient;
+export class Messenger extends EventTarget {
+  _reciever: Reciever;
+  _lastPulled: number;
   clientId: UUID;
-  lastPulled: number;
 
-  // probably could have gotten away with using fetch requests for this instead of websocket
-  #sendMessage = async (message: Message): Promise<Response> => {
-    this.websocket.send(JSON.stringify(message));
-
-    const response = await this.websocket.receive();
-
-    return JSON.parse(response) as Response;
-  };
-
-  constructor(websocket: WebSocketClient) {
-    this.websocket = websocket;
+  constructor(websocket: WebSocket) {
+    super();
+    this._reciever = new Reciever(websocket);
     this.clientId = self.crypto.randomUUID();
 
+    this._reciever.registerEvent("editor", (data) => {
+      console.log(data);
+      this.dispatchEvent(new CustomEvent("editor", { detail: data.editors }));
+    });
+
     // pulling before initializing will break something, but it shouldn't be able to happen if i do everything properly
-    this.lastPulled = -1;
+    this._lastPulled = -1;
   }
 
   async init(): Promise<string> {
-    let response = (await this.#sendMessage("start")) as StartResponse;
+    let response = (await this._reciever.call("start")) as StartResponse;
 
-    this.lastPulled = response.currentId;
+    this._lastPulled = response.currentId;
 
     return response.document;
   }
 
-  async sendPush(changes: Change[]): Promise<void> {
+  sendPush(changes: Change[]): void {
     let message: PushMessage = {
       type: "push",
       changes,
     };
 
-    await this.#sendMessage(message);
+    this._reciever.call(message);
   }
 
   async sendPull(): Promise<Change[]> {
     let message: PullMessage = {
       type: "pull",
-      lastPulled: this.lastPulled,
+      lastPulled: this._lastPulled,
     };
 
-    let response = (await this.#sendMessage(message)) as PullResponse;
+    let response = (await this._reciever.call(message)) as PullResponse;
 
-    this.lastPulled = response.currentId;
+    this._lastPulled = response.currentId;
 
     return response.pulledChanges;
   }

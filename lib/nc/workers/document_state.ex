@@ -8,6 +8,7 @@ defmodule Nc.Workers.DocumentState do
 
   @type t() :: %{
           document: DocTree.t(),
+          name: String.t(),
           current_id: non_neg_integer(),
           changelog: [changelog()],
           clients: %{pid() => [Sync.change()]}
@@ -18,10 +19,11 @@ defmodule Nc.Workers.DocumentState do
           version: non_neg_integer()
         }
 
-  @spec new(String.t()) :: t()
-  def new(text) do
+  @spec new(String.t(), String.t()) :: t()
+  def new(name, text) do
     %{
       document: DocTree.new(text),
+      name: name,
       current_id: 1,
       changelog: [],
       clients: %{}
@@ -106,10 +108,11 @@ defmodule Nc.Workers.DocumentState do
     new_current_id = Enum.count(client_changes) + current_id
 
     %{
-      document: new_document,
-      current_id: new_current_id,
-      changelog: new_changelog,
-      clients: new_clients
+      state
+      | document: new_document,
+        current_id: new_current_id,
+        changelog: new_changelog,
+        clients: new_clients
     }
   end
 end

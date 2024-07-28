@@ -11,9 +11,14 @@
   export let websocket;
   const messenger = new Messenger(websocket);
 
+  messenger.addEventListener("editor", ((e: CustomEvent) => {
+    editors = e.detail;
+  }) as EventListener);
+
   let pending: Change[] = [];
   let unpushed = 0;
   let uncondensed = new Delta();
+  let editors = 0;
 
   let autoSyncHandle: ReturnType<typeof setInterval> | null = null;
 
@@ -149,3 +154,4 @@
   Automatic Synchronization
   <input type="checkbox" on:click={handleCheckbox} />
 </label>
+<p>other editors: {editors - 1}</p>

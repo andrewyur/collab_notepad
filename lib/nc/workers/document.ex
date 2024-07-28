@@ -10,15 +10,12 @@ defmodule Nc.Workers.Document do
   alias Nc.Workers.DocumentState
   alias Nc.System.DocumentRegistry
 
-  def start_link(id) do
-    GenServer.start_link(__MODULE__, nil, name: DocumentRegistry.via_tuple(id))
+  def start_link({id, name, text}) do
+    GenServer.start_link(__MODULE__, {name, text}, name: DocumentRegistry.via_tuple(id, name))
   end
 
-  def init(_init_arg) do
-    {:ok,
-     DocumentState.new(
-       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-     )}
+  def init({name, text}) do
+    {:ok, DocumentState.new(name, text)}
   end
 
   def handle_call(request, from, state) do
@@ -39,11 +36,20 @@ defmodule Nc.Workers.Document do
   def handle_start(state, from) do
     {state, document, current_id} = DocumentState.add_new_client(state, from)
 
+    # GenServer.cast doesn't trigger handle_info...
+    Enum.each(Map.keys(state.clients), fn pid ->
+      send(pid, {:editor, Enum.count(state.clients)})
+    end)
+
     {:reply, {:start, document, current_id}, state}
   end
 
   def handle_end(state, from) do
     state = DocumentState.remove_client(state, from)
+
+    Enum.each(Map.keys(state.clients), fn pid ->
+      send(pid, {:editor, Enum.count(state.clients)})
+    end)
 
     if Enum.count(state.clients) == 0 do
       # 5 second time out after last client has left

@@ -1,14 +1,19 @@
 # this module implements the WebSock behaviour, and translates the json messages the client sends through the websocket server into erlang terms, and sends them as messages to the server
 defmodule Nc.Workers.ClientHandler do
   def handle_in({json, [opcode: :text]}, pid) do
-    message = json_to_message(json)
+    {message, id} = json_to_message(json)
 
     response =
       GenServer.call(pid, message)
       |> response_to_json()
-      |> Poison.encode!()
 
-    {:push, {:text, response}, pid}
+    str =
+      Poison.encode!(%{
+        id: id,
+        response: response
+      })
+
+    {:push, {:text, str}, pid}
   end
 
   def init(id) do
@@ -21,6 +26,16 @@ defmodule Nc.Workers.ClientHandler do
     end
   end
 
+  def handle_info(message, pid) do
+    case message do
+      {:editor, editors} ->
+        {:push, {:text, Poison.encode!(%{type: :editor, editors: editors})}, pid}
+
+      _ ->
+        {:ok, pid}
+    end
+  end
+
   def terminate(reason, pid) do
     if reason == :remote do
       GenServer.call(pid, :end)
@@ -29,21 +44,23 @@ defmodule Nc.Workers.ClientHandler do
 
   # I would much prefer to not have to do this manually, but there are not a lot of options at the moment
   def json_to_message(json_string) do
-    case Poison.decode!(json_string) do
+    map = Poison.decode!(json_string)
+
+    case map["message"] do
       "start" ->
-        :start
+        {:start, map["id"]}
 
       %{
         "type" => "push",
         "changes" => changes
       } ->
-        {:push, Enum.map(changes, &map_to_change/1)}
+        {{:push, Enum.map(changes, &map_to_change/1)}, map["id"]}
 
       %{
         "type" => "pull",
         "lastPulled" => last_pulled
       } ->
-        {:pull, last_pulled}
+        {{:pull, last_pulled}, map["id"]}
     end
   end
 

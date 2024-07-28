@@ -1,9 +1,16 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+
+  let name = "Untitled Note";
+  let documents: { [key: string]: string } = {};
+
+  const serverUrl = import.meta.env.VITE_SERVER_URL;
+
   let createNewDoc = async () => {
-    const serverUrl = import.meta.env.VITE_SERVER_URL;
     try {
       // send request to server to make a new document
-      const response = await fetch(`${serverUrl}/new`);
+      const querystring = new URLSearchParams({ name }).toString();
+      const response = await fetch(`${serverUrl}/new?${querystring}`);
       if (!response.ok) {
         throw new Error(`Response status: ${response.status}`);
       }
@@ -19,10 +26,24 @@
       }
     }
   };
+
+  onMount(async () => {
+    const response = await fetch(`${serverUrl}/names`);
+    if (response.ok) {
+      documents = await response.json();
+    }
+  });
 </script>
 
 <main>
-  <button on:click={createNewDoc}>+</button>
+  <input type="text" bind:value={name} />
+  <button on:click={createNewDoc}>Create</button>
+  <p>active notes:</p>
+  <div>
+    {#each Object.keys(documents) as name}
+      <a href={`${serverUrl}/document/${documents[name]}`}>{name}</a>
+    {/each}
+  </div>
 </main>
 
 <style>

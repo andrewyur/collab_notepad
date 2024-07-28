@@ -3,8 +3,8 @@ defmodule Nc.System.DocumentRegistry do
     Registry.start_link(args)
   end
 
-  def via_tuple(id) do
-    {:via, Registry, {__MODULE__, id}}
+  def via_tuple(id, name) do
+    {:via, Registry, {__MODULE__, id, name}}
   end
 
   def child_spec(_arg) do

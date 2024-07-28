@@ -9,8 +9,10 @@ defmodule Nc.System.DocumentSupervisor do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
-  def new_document do
+  def new_document(name, text) do
     document_id = UUID.uuid4()
-    {DynamicSupervisor.start_child(__MODULE__, {Nc.Workers.Document, document_id}), document_id}
+
+    {DynamicSupervisor.start_child(__MODULE__, {Nc.Workers.Document, {document_id, name, text}}),
+     document_id}
   end
 end

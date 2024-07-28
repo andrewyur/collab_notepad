@@ -6,21 +6,31 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
-- fully flesh out the web client
-  - home bar
-    - button to back to the home screen
-    - button to go share the document link
-    - button to open the document in another tab
-    - (?) button to link back to my portfolio page
-  - Editor configuration
-    - style it as close as possible to windows notepad
-    - add options as a div to the side
 - figure out how to make helper functions work properly with the ls
 - refactor server tests to fit project structure
+  - add option to start a document with any given text
 - make sure type annotations are added for everything
-- add client tests (maybe?)
-- use session to track which documents the user currently has open
+- fully flesh out the web client design
+  - home bar
+    - button to back to the home screen
+    - button to copy the doument link to the clipboard
+    - button to open the document in another tab
+  - Editor configuration
+    - padding inside editor
+    - background color
+    - remove spellcheck
+    - line height
+    - add options as a div to the side
+    - pull and push buttons are greyed out when automatic synchronization is on
+  - Home Page
+    - add usage tips (how the conflict resolution algorithm can handle a lot)
+    - link to the repository
+    - link to the article in my personal portfolio
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
+- error logging
+- dockerize & set up CI
+- buy the super-youtube.com domain
+- figure out how to host on a cloud provider
 - use ecto to persist documents?
 
 ## Resources
