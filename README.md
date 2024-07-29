@@ -6,10 +6,6 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
-- figure out how to make helper functions work properly with the ls
-- refactor server tests to fit project structure
-  - add option to start a document with any given text
-- make sure type annotations are added for everything
 - fully flesh out the web client design
   - home bar
     - button to back to the home screen
@@ -57,3 +53,7 @@ Using elixir & bandit for the back end, and svelte for the front end
   - create an editor from scratch, using raw `<p>` elements to display text, and tracking events to detect changes (a lot of work)
   - use a library that has already done the above for me
 - I ended up choosing the third option, and going with the Quill library. It turns out this library also has an operational transform implementation, but oh well. what can i do...
+- deciding not to refactor the tests so that they work with the current implementation because:
+  - I dont plan on touching the part of the code that the tests cover
+  - there have been so many significant changes and it would take a lot of work
+  - the lsp is not showing errors properly, and so to check where the errors are i would have to run the tests every time i change something
