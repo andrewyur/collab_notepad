@@ -11,14 +11,9 @@
   export let websocket;
   const messenger = new Messenger(websocket);
 
-  messenger.addEventListener("editor", ((e: CustomEvent) => {
-    editors = e.detail;
-  }) as EventListener);
-
   let pending: Change[] = [];
   let unpushed = 0;
   let uncondensed = new Delta();
-  let editors = 0;
 
   let autoSyncHandle: ReturnType<typeof setInterval> | null = null;
 
@@ -69,8 +64,9 @@
       modules: {
         toolbar: false,
       },
-      theme: "snow",
+      theme: "bubble",
       formats: [],
+      placeholder: "Type Here!",
     });
 
     quill.setText(await messenger.init());
@@ -82,24 +78,14 @@
     });
 
     const condense_changes = () => {
-      // console.log("uncondensed: ", uncondensed);
-
       const changes_uncondensed = delta_to_changes(uncondensed);
       unpushed += changes_uncondensed.length;
       pending = [...pending, ...changes_uncondensed];
       uncondensed = new Delta();
-
-      // console.log("uncondensed changes: ", changes_uncondensed);
-      // console.log("pending: ", pending);
     };
 
     push = async () => {
       condense_changes();
-
-      // console.log(
-      //   "unpushed: ",
-      //   pending.slice(-1 * unpushed, pending.length + 1)
-      // );
 
       await messenger.sendPush(
         pending.slice(-1 * unpushed, pending.length + 1)
@@ -115,8 +101,6 @@
       const changeObj = reconcileAgainst(newChanges, pending);
       const changes_to_apply = changeObj.new_incoming_list;
       pending = changeObj.new_outgoing_list;
-
-      // console.log(changeObj);
 
       changes_to_apply.forEach((change) => {
         switch (change?.type) {
@@ -142,16 +126,18 @@
         await push();
       }, 500);
     } else {
-      if (autoSyncHandle) clearInterval(autoSyncHandle);
+      if (autoSyncHandle) {
+        clearInterval(autoSyncHandle);
+        autoSyncHandle = null;
+      }
     }
   };
 </script>
 
 <div id="editor"></div>
-<button on:click={pull}>Pull</button>
-<button on:click={push}>Push</button>
+<button on:click={pull} disabled={autoSyncHandle != null}>pull</button>
+<button on:click={push} disabled={autoSyncHandle != null}>push</button>
 <label>
-  Automatic Synchronization
   <input type="checkbox" on:click={handleCheckbox} />
+  automatic
 </label>
-<p>other editors: {editors - 1}</p>

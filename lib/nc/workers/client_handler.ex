@@ -112,11 +112,12 @@ defmodule Nc.Workers.ClientHandler do
 
   def response_to_json(message) do
     case message do
-      {:start, doctree, current_verison} ->
+      {:start, doctree, current_verison, name} ->
         %{
           "type" => "start",
           "document" => Nc.Core.DocTree.tree_to_string(doctree),
-          "currentId" => current_verison
+          "currentId" => current_verison,
+          "title" => name
         }
 
       :push ->

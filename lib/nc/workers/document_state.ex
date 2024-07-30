@@ -47,7 +47,7 @@ defmodule Nc.Workers.DocumentState do
     Enum.reduce(change_list, document, &apply_change(&2, &1))
   end
 
-  @spec add_new_client(t(), pid()) :: {t(), DocTree.t(), non_neg_integer()}
+  @spec add_new_client(t(), pid()) :: {t(), DocTree.t(), non_neg_integer(), String.t()}
   def add_new_client(state, client_pid) do
     {
       %{
@@ -55,7 +55,8 @@ defmodule Nc.Workers.DocumentState do
         | clients: Map.put_new(state.clients, client_pid, [])
       },
       state.document,
-      state.current_id - 1
+      state.current_id - 1,
+      state.name
     }
   end
 

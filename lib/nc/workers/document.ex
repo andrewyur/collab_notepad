@@ -32,16 +32,16 @@ defmodule Nc.Workers.Document do
   end
 
   @spec handle_start(DocumentState.t(), pid()) ::
-          {:reply, {:start, DocTree.t(), non_neg_integer()}, DocumentState.t()}
+          {:reply, {:start, DocTree.t(), non_neg_integer(), String.t()}, DocumentState.t()}
   def handle_start(state, from) do
-    {state, document, current_id} = DocumentState.add_new_client(state, from)
+    {state, document, current_id, name} = DocumentState.add_new_client(state, from)
 
     # GenServer.cast doesn't trigger handle_info...
     Enum.each(Map.keys(state.clients), fn pid ->
       send(pid, {:editor, Enum.count(state.clients)})
     end)
 
-    {:reply, {:start, document, current_id}, state}
+    {:reply, {:start, document, current_id, name}, state}
   end
 
   def handle_end(state, from) do

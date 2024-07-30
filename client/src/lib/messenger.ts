@@ -1,5 +1,6 @@
 import type { UUID } from "crypto";
 import { Reciever } from "./reciever";
+import { editors, title } from "../stores";
 
 export type Insert = {
   type: "insert";
@@ -17,9 +18,11 @@ export type Delete = {
 
 export type Change = Insert | Delete | undefined;
 
+// i could probably do away with this start message with ssr...
 type StartMessage = "start";
 type StartResponse = {
   type: "start";
+  title: string;
   document: string;
   currentId: number;
 };
@@ -44,19 +47,17 @@ type Message = StartMessage | PullMessage | PushMessage;
 
 type Response = StartResponse | PullResponse | PushResponse;
 
-export class Messenger extends EventTarget {
+export class Messenger {
   _reciever: Reciever;
   _lastPulled: number;
   clientId: UUID;
 
   constructor(websocket: WebSocket) {
-    super();
     this._reciever = new Reciever(websocket);
     this.clientId = self.crypto.randomUUID();
 
     this._reciever.registerEvent("editor", (data) => {
-      console.log(data);
-      this.dispatchEvent(new CustomEvent("editor", { detail: data.editors }));
+      editors.set(data.editors);
     });
 
     // pulling before initializing will break something, but it shouldn't be able to happen if i do everything properly
@@ -67,6 +68,7 @@ export class Messenger extends EventTarget {
     let response = (await this._reciever.call("start")) as StartResponse;
 
     this._lastPulled = response.currentId;
+    title.set(response.title);
 
     return response.document;
   }
