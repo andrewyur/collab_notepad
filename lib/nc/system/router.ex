@@ -42,18 +42,23 @@ defmodule Nc.System.Router do
     |> halt()
   end
 
-  # this obviously would not be good at larger scales, but for right now, it is ok because this is really the only way to do this apparently
   get "/names" do
-    response =
-      Registry.select(Nc.System.DocumentRegistry, [{{:"$1", :_, :"$3"}, [], [{{:"$3", :"$1"}}]}])
-      |> Enum.take(3)
-      |> Enum.into(%{})
-      |> Poison.encode!()
+    with {:ok, conn} <-
+           check_rate(conn, Hammer.check_rate("edit:#{inspect(conn.remote_ip)}", 500, 10)) do
+      # this obviously would not be good at larger scales, but for right now, it is ok because this is really the only way to do this apparently
+      response =
+        Registry.select(Nc.System.DocumentRegistry, [
+          {{:"$1", :_, :"$3"}, [], [{{:"$3", :"$1"}}]}
+        ])
+        |> Enum.take(3)
+        |> Enum.into(%{})
+        |> Poison.encode!()
 
-    conn
-    |> put_resp_content_type("application/json")
-    |> send_resp(200, response)
-    |> halt()
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, response)
+      |> halt()
+    end
   end
 
   get "/new" do

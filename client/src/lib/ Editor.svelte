@@ -87,9 +87,11 @@
     push = async () => {
       condense_changes();
 
-      await messenger.sendPush(
-        pending.slice(-1 * unpushed, pending.length + 1)
-      );
+      if (unpushed > 0) {
+        await messenger.sendPush(
+          pending.slice(-1 * unpushed, pending.length + 1)
+        );
+      }
       unpushed = 0;
     };
 

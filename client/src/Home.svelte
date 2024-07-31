@@ -1,30 +1,31 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  let name = "Untitled Note";
+  let name = "";
   let documents: { [key: string]: string } = {};
 
   const serverUrl = import.meta.env.VITE_SERVER_URL;
 
   let createNewDoc = async () => {
-    try {
-      // send request to server to make a new document
-      const querystring = new URLSearchParams({ name }).toString();
-      const response = await fetch(`${serverUrl}/new?${querystring}`);
-      if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
-      }
-
-      // server responds with the id of the document
-      const documentId = (await response.json()).id;
-
-      // redirect user to the url of the document
-      window.location.href = `${serverUrl}/document/${documentId}`;
-    } catch (error) {
-      if (error instanceof Error) {
-        alert(`Could not create a document: (${error.message})`);
-      }
+    // ideally we would perform some sort of input sanitization/validation here
+    if (name.length == 0) {
+      alert("Note name cannot be empty!");
+      return;
     }
+
+    // send request to server to make a new document
+    const querystring = new URLSearchParams({ name }).toString();
+    const response = await fetch(`${serverUrl}/new?${querystring}`);
+
+    if (!response.ok) {
+      alert("Sorry! there was an error creating a document");
+    }
+
+    // server responds with the id of the document
+    const documentId = (await response.json()).id;
+
+    // redirect user to the url of the document
+    window.location.href = `${serverUrl}/document/${documentId}`;
   };
 
   onMount(async () => {
@@ -42,13 +43,17 @@
 <main>
   <h1>notepad_collab</h1>
   <div class="card">
-    <input type="text" bind:value={name} />
+    <input
+      type="text"
+      bind:value={name}
+      placeholder="type a name for the note!"
+    />
     <button on:click={createNewDoc}>create</button>
   </div>
 
   {#if Object.keys(documents).length > 0}
-    <p>active notes:</p>
-    <div>
+    <p id="links-header">active notes:</p>
+    <div id="links">
       {#each Object.keys(documents) as name}
         <a href={`${serverUrl}/document/${documents[name]}`}>{name}</a>
       {/each}
@@ -56,10 +61,13 @@
   {/if}
 
   <p>
-    This is an online demo for a text conflict resolution algorithm (Operational
-    Transformation) I implemented. It can handle multiple clients, and pushing
-    from a detached state (Git can't do that!), so create a note, open it in
-    multiple tabs and do your best to mess it up.
+    This is an online demo for a text conflict resolution algorithm, which is an
+    implementation of <a
+      href="https://en.wikipedia.org/wiki/Operational_transformation"
+      >Operational Transform</a
+    >. It can handle multiple clients and pushing from a detached state (Git
+    can't do that!), so create a note, open it in multiple tabs and do your best
+    to mess it up.
   </p>
   <p>
     You can read more about the OT implementation or how I made the
@@ -75,3 +83,24 @@
     >!
   </p>
 </main>
+
+<style>
+  #links-header {
+    margin: 0;
+  }
+
+  #links {
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #links * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  input {
+    margin-bottom: 5px;
+  }
+</style>

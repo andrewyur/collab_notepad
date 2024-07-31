@@ -15,19 +15,31 @@
   const websocketUrl = `ws://${window.location.host}${window.location.pathname}/edit`;
   let websocket = new WebSocket(websocketUrl);
   let connected = false;
+  let failed: string | null = null;
 
   websocket.addEventListener("open", async (e) => {
     connected = true;
+  });
 
-    websocket.addEventListener("error", (e) => {
-      connected = false;
-      alert("An error occured when connecting to the Server!");
-    });
+  websocket.addEventListener("close", (e) => {
+    connected = false;
 
-    websocket.addEventListener("close", (e) => {
-      connected = false;
-      alert(`Connection closed: ${e.reason}`);
-    });
+    console.log(e);
+
+    switch (e.code) {
+      // cannot figure out why the time out is throwing error code 1002, this is a workaround
+      case 1002:
+        failed = "Connection timed out!";
+        break;
+      case 1000:
+        failed = "Document not found!";
+        break;
+      case 1013:
+        failed = "You have been rate limited! Relax!";
+        break;
+      default:
+        failed = "Reason unknown...";
+    }
   });
 
   const copyLink = () => {
@@ -40,11 +52,9 @@
 </script>
 
 <svelte:head>
-  <title
-    >{editors_value > 0
-      ? `${title_value} | ${editors_value - 1}`
-      : "not found"}</title
-  >
+  {#if editors_value > 0}
+    <title>{`${title_value} | ${editors_value - 1}`}</title>
+  {/if}
 </svelte:head>
 
 <nav>
@@ -57,7 +67,31 @@
     <p>other editors: {editors_value - 1}</p>
     <Editor {websocket} />
   {/if}
+
+  {#if failed != null}
+    <h1>Connection Closed</h1>
+    <p>{failed}</p>
+  {/if}
 </main>
 
 <style>
+  nav {
+    position: fixed;
+    top: 5%;
+    left: 0;
+    right: 0;
+  }
+
+  h1 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0;
+  }
+
+  p {
+    margin-top: 0;
+    font-size: small;
+    margin-bottom: 30px;
+  }
 </style>

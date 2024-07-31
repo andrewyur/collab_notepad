@@ -24,15 +24,14 @@ defmodule Nc.Workers.Document do
     case request do
       :start -> handle_start(state, client)
       :end -> handle_end(state, client)
-      :read -> handle_read(state)
-      :debug -> handle_debug(state)
       {:pull, last_pulled} -> handle_pull(state, client, last_pulled)
       {:push, changes} -> handle_push(state, client, changes)
     end
   end
 
   @spec handle_start(DocumentState.t(), pid()) ::
-          {:reply, {:start, DocTree.t(), non_neg_integer(), String.t()}, DocumentState.t()}
+          {:reply, {:start, DocTree.t(), non_neg_integer(), String.t()}, DocumentState.t(),
+           timeout()}
   def handle_start(state, from) do
     {state, document, current_id, name} = DocumentState.add_new_client(state, from)
 
@@ -41,7 +40,7 @@ defmodule Nc.Workers.Document do
       send(pid, {:editor, Enum.count(state.clients)})
     end)
 
-    {:reply, {:start, document, current_id, name}, state}
+    {:reply, {:start, document, current_id, name}, state, 1000 * 60 * 15}
   end
 
   def handle_end(state, from) do
@@ -52,10 +51,9 @@ defmodule Nc.Workers.Document do
     end)
 
     if Enum.empty?(state.clients) do
-      # 5 second time out after last client has left
-      {:reply, :ok, state, 5000}
+      {:reply, :ok, state, 1000 * 5}
     else
-      {:reply, :ok, state}
+      {:reply, :ok, state, 1000 * 60 * 15}
     end
   end
 
@@ -63,45 +61,19 @@ defmodule Nc.Workers.Document do
     {:stop, :normal, state}
   end
 
-  @spec handle_debug(DocumentState.t()) :: {:reply, DocumentState.t(), DocumentState.t()}
-  def handle_debug(state) do
-    {:reply, state, state}
-  end
-
-  # for testing purposes only
-  @spec handle_read(DocumentState.t()) :: {:reply, String.t(), DocumentState.t()}
-  def handle_read(state) do
-    {:reply, DocTree.tree_to_string(state.document), state}
-  end
-
   @spec handle_pull(DocumentState.t(), pid(), non_neg_integer()) ::
-          {:reply, {:pull, [Sync.change()], non_neg_integer()}, DocumentState.t()}
+          {:reply, {:pull, [Sync.change()], non_neg_integer()}, DocumentState.t(), timeout()}
   def handle_pull(state, from, last_pulled) do
     {state, pulled_changes, current_id} = DocumentState.handle_pull(state, from, last_pulled)
 
-    {:reply, {:pull, pulled_changes, current_id}, state}
+    {:reply, {:pull, pulled_changes, current_id}, state, 1000 * 60 * 15}
   end
 
   @spec handle_push(DocumentState.t(), pid(), [Sync.change()]) ::
-          {:reply, :push, DocumentState.t()}
+          {:reply, :push, DocumentState.t(), timeout()}
   def handle_push(state, from, changes) do
     state = DocumentState.handle_push(state, from, changes)
 
-    {:reply, :push, state}
-  end
-
-  @spec read(pid()) :: String.t()
-  def read(server) do
-    GenServer.call(server, :read)
-  end
-
-  @spec kill(pid()) :: :ok
-  def kill(server) do
-    GenServer.stop(server)
-  end
-
-  @spec debug(pid()) :: DocumentState.t()
-  def debug(server) do
-    GenServer.call(server, :debug)
+    {:reply, :push, state, 1000 * 60 * 15}
   end
 end

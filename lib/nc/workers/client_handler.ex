@@ -21,6 +21,7 @@ defmodule Nc.Workers.ClientHandler do
       {:push, {:text, str}, {pid, ip}}
     else
       # any incorrect/invalid websocket messages will come from outside code
+      {:deny, _} -> {:stop, :rate, 1013, {pid, ip}}
       _ -> {:push, {:text, "Error"}, {pid, ip}}
     end
   end
@@ -31,7 +32,7 @@ defmodule Nc.Workers.ClientHandler do
         {:ok, {pid, ip}}
 
       [] ->
-        {:stop, :normal, {1000, "Document Not Found"}, id}
+        {:stop, :normal, 1000, id}
     end
   end
 
@@ -45,12 +46,11 @@ defmodule Nc.Workers.ClientHandler do
     end
   end
 
-  def terminate(:remote, {pid, _ip}) do
-    GenServer.call(pid, :end)
+  def terminate(_reason, state) do
+    with {pid, _ip} <- state do
+      GenServer.call(pid, :end)
+    end
   end
-
-  # need to have a matching clause for the rest of the terminate clause
-  def terminate(_, _), do: nil
 
   # I would much prefer to not have to do this manually, but there are not a lot of options at the moment
   def json_to_message(map) do

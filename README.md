@@ -6,23 +6,16 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
-- ghost document bug when websocket times out, but user does not acknowledge the alert
-  - this could be fixed by removing the alert, but I think the underlying problem would still be there
-  - Should implement a cleanup timer in the document process, bc the errors the debug logger is giving me are very vague and I am not likely to find the cause of this
-- make users type name, validate inputs (swear words, empty strings)
-- fix css
-  - space out active document links
-  - make the other editors text smaller
 - optimize for scale
   - configure a load tester, and benchmark
   - test to see if all supervisors are working by crashing functions
+  - figure out how to attach pheonix live dashboard to the document running in the cloud
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
 - error logging
 - sort out running in production mode, and moving Nc.System.Config into config.exs
 - dockerize & set up CI
 - buy the super-youtube.com domain
 - figure out how to host on a cloud provider
-- figure out how to attach pheonix live dashboard to the document running in the cloud
 
 ## Resources
 
