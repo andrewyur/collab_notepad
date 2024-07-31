@@ -1,5 +1,7 @@
 defmodule Nc.Workers.DocumentState do
-  # the definition of the server state is done here, as well as all of the functions for manipulating the state
+  @moduledoc """
+  the definition of the server state is done here, as well as all of the functions for manipulating the state
+  """
 
   # all lists will be in proper chronological order! premature optimization causes a lot of problems. Ill fix it when I get to it.
 

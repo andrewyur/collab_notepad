@@ -1,18 +1,14 @@
 defmodule Nc.Core.DocTree do
   @moduledoc """
-  AVL tree that stores the document in chunks, so that string manipulations are not operating on the entire document.
-  internal nodes store length of their left child, so finding the right chunk from a global index is pretty easy
-  leaf nodes store the actual strings
-  insert & delete update the indexes of the tree, but do not keep the sizes of the chunks the same, so the restucture
-  function must be used to split/merge chunks, and rebalance the tree, but should probably not be used frequently(on page reload?).
-  because elixir is an immutable language, this should be relatively fast & space efficient because data is reused
-
-  This is a really cool data structure, but is entirely overkill for this use case! oh well...
+  AVL tree that stores the document in chunks, so that string manipulations are not operating on the entire document internal nodes store length of their left child, so finding the right chunk from a global index is pretty easy leaf nodes store the actual strings
   """
 
-  # the tests expect a chunk size of 20, which realistically is too small
-  # figure out how to fix this later
-  @chunk_size 20
+  # This is a really cool data structure, but is entirely overkill for this use case! oh well...
+
+  # insert & delete update the indexes of the tree, but do not keep the sizes of the chunks the same, so the restucture function must be used to split/merge chunks, and rebalance the tree, but should probably not be used frequently.
+  # Because elixir is an immutable language, this should be relatively fast & space efficient because data is reused
+
+  @chunk_size 100
 
   @type t() :: internal() | leaf()
 
@@ -38,8 +34,7 @@ defmodule Nc.Core.DocTree do
 
   # Tree utility
 
-  # <> is slow, so this is only for tests.
-  # the client will be sent some form of list or object, and then convert it on their own time
+  # <> copies data, so this should be used infrequently
   @spec tree_to_string(t()) :: String.t()
   def tree_to_string(tree) do
     cond do
@@ -57,8 +52,8 @@ defmodule Nc.Core.DocTree do
   @spec create_node(non_neg_integer(), t(), t()) :: internal()
   def create_node(val, left, right), do: {val, %{0 => left, 1 => right}}
 
-  @spec is_internal?(t()) :: boolean()
-  def is_internal?(n), do: !is_bitstring(n)
+  @spec internal?(t()) :: boolean()
+  def internal?(n), do: !is_bitstring(n)
 
   @spec get_left(internal()) :: t()
   def get_left({_, map}), do: Map.fetch!(map, 0)
@@ -92,7 +87,7 @@ defmodule Nc.Core.DocTree do
   @spec insert_p(t(), non_neg_integer(), String.t()) :: {t(), non_neg_integer()}
   # this has to be public for the tests :(
   def insert_p(tree, index, text) do
-    if is_internal?(tree) do
+    if internal?(tree) do
       tree_val = get_val(tree)
 
       if index > tree_val do
@@ -114,25 +109,26 @@ defmodule Nc.Core.DocTree do
 
   @spec delete(t(), non_neg_integer(), non_neg_integer()) :: t()
   def delete(tree, index, amount) do
-    if is_internal?(tree) do
+    if internal?(tree) do
       tree_val = get_val(tree)
 
-      if index > tree_val do
-        new_node = delete(get_right(tree), index - tree_val, amount)
+      cond do
+        index > tree_val ->
+          new_node = delete(get_right(tree), index - tree_val, amount)
 
-        create_node(tree_val, get_left(tree), new_node)
-      else
-        if index + amount > tree_val do
+          create_node(tree_val, get_left(tree), new_node)
+
+        index + amount > tree_val ->
           diff = index + amount - tree_val
           new_left = delete(get_left(tree), index, amount - diff)
           new_right = delete(get_right(tree), 0, diff)
 
           create_node(tree_val - (amount - diff), new_left, new_right)
-        else
+
+        true ->
           new_node = delete(get_left(tree), index, amount)
 
           create_node(tree_val - amount, new_node, get_right(tree))
-        end
       end
     else
       {front, rest} = String.split_at(tree, index)
@@ -159,7 +155,7 @@ defmodule Nc.Core.DocTree do
 
   @spec fix_nodes(t()) :: t()
   def fix_nodes(node) do
-    if is_internal?(node) do
+    if internal?(node) do
       left = get_left(node)
       right = get_right(node)
       new_node = apply_to_children(node, &fix_nodes/1)
@@ -181,7 +177,7 @@ defmodule Nc.Core.DocTree do
 
   @spec recalc_vals(t()) :: {t(), non_neg_integer()}
   def recalc_vals(tree) do
-    if is_internal?(tree) do
+    if internal?(tree) do
       {left, left_length} = recalc_vals(get_left(tree))
       {right, right_length} = recalc_vals(get_right(tree))
       {create_node(left_length, left, right), left_length + right_length}
@@ -210,7 +206,7 @@ defmodule Nc.Core.DocTree do
   end
 
   defp eval_leaf_size(tree) do
-    if is_internal?(tree) do
+    if internal?(tree) do
       {max_left, min_left} = eval_leaf_size(get_left(tree))
       {max_right, min_right} = eval_leaf_size(get_right(tree))
 
@@ -221,7 +217,7 @@ defmodule Nc.Core.DocTree do
   end
 
   defp eval_tree_height(tree) do
-    if is_internal?(tree) do
+    if internal?(tree) do
       {max_left, min_left} = eval_tree_height(get_left(tree))
       {max_right, min_right} = eval_tree_height(get_right(tree))
 

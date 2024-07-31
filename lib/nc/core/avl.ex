@@ -1,5 +1,7 @@
 defmodule Nc.Core.Avl do
-  # AVL tree functionality
+  @moduledoc """
+  AVL tree functionality used in doctree
+  """
 
   def height(node) do
     case node do

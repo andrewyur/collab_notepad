@@ -1,4 +1,7 @@
 defmodule Nc.System.DocumentRegistry do
+  @moduledoc """
+  Using elixir's Registry to store documents under their unique ids
+  """
   def start_link(args) do
     Registry.start_link(args)
   end

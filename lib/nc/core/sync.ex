@@ -1,14 +1,13 @@
 defmodule Nc.Core.Sync do
+  @moduledoc """
+  The core synchronization functionality for the operational transform implementations seen in the client/server
+  """
+
   # similar to the `xform` function in the jupiter OT model, but working with blocks of text instead of individual text operations
 
   # Excerpt from the paper:
-  # "The general tool for handling conflicting messages is a function, xform,
-  # that maps a pair of messages to the fixed up versions. We write
-  # Xform(c, s) = { c', s' }
-  # where c and s are the original client and server messages.
-  # The messages c' and s' must have the property that if the client applies c
-  # followed by s', and the server applies s followed by c', then the client and
-  # server will wind up in the same final state."
+
+  # "The general tool for handling conflicting messages is a function, xform, that maps a pair of messages to the fixed up versions. We write Xform(c, s) = { c', s' } where c and s are the original client and server messages. The messages c' and s' must have the property that if the client applies c followed by s', and the server applies s followed by c', then the client and server will wind up in the same final state."
 
   @type change() ::
           {
@@ -28,6 +27,7 @@ defmodule Nc.Core.Sync do
   @spec reconcile(change(), change()) :: {change(), change()}
 
   # this function must be commutative!
+  # credo is flagging this as having a high cyclomatic complexity, but we are right at the finish line, no point in refactoring it now
   def reconcile({:insert, position_1, text_1, from_1}, {:insert, position_2, text_2, from_2}) do
     cond do
       position_1 > position_2 || (position_1 == position_2 && text_1 > text_2) ||

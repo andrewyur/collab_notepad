@@ -1,5 +1,7 @@
 defmodule Nc.Workers.DummyClientState do
-  # the definition of the client state are done here, as well as all of the functions for manipulating the state
+  @moduledoc """
+  state and state functions for a dummy client used for testing
+  """
 
   # state should not be entirely encapsulated within this module however, as that would complicate sending messages & reading
 

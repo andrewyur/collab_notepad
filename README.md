@@ -6,12 +6,23 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
+- ghost document bug when websocket times out, but user does not acknowledge the alert
+  - this could be fixed by removing the alert, but I think the underlying problem would still be there
+  - Should implement a cleanup timer in the document process, bc the errors the debug logger is giving me are very vague and I am not likely to find the cause of this
+- make users type name, validate inputs (swear words, empty strings)
+- fix css
+  - space out active document links
+  - make the other editors text smaller
+- optimize for scale
+  - configure a load tester, and benchmark
+  - test to see if all supervisors are working by crashing functions
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
 - error logging
+- sort out running in production mode, and moving Nc.System.Config into config.exs
 - dockerize & set up CI
 - buy the super-youtube.com domain
 - figure out how to host on a cloud provider
-- use ecto to persist documents?
+- figure out how to attach pheonix live dashboard to the document running in the cloud
 
 ## Resources
 
@@ -20,6 +31,7 @@ Using elixir & bandit for the back end, and svelte for the front end
 - <https://livebook.manning.com/book/elixir-in-action-third-edition/>
 - <https://samuelmullen.com/articles/elixir-processes-testing>
 - <https://dl.acm.org/doi/pdf/10.1145/215585.215706>
+- <https://hexdocs.pm/plds/PLDS.html>
 
 ## Journal
 
@@ -41,3 +53,4 @@ Using elixir & bandit for the back end, and svelte for the front end
   - I dont plan on touching the part of the code that the tests cover
   - there have been so many significant changes and it would take a lot of work
   - the lsp is not showing errors properly, and so to check where the errors are i would have to run the tests every time i change something
+  - just realized my use of the terms "note" and "document" to describe the place where the user writes things is horribly inconsistent (as well as my use of snake_case and CamelCase)

@@ -1,74 +1,82 @@
-# this module implements the WebSock behaviour, and translates the json messages the client sends through the websocket server into erlang terms, and sends them as messages to the server
 defmodule Nc.Workers.ClientHandler do
-  def handle_in({json, [opcode: :text]}, pid) do
-    {message, id} = json_to_message(json)
+  @moduledoc """
+  this module implements the WebSock behaviour, and translates the json messages the client sends through the websocket server into erlang terms, and sends them as messages to the server
+  """
 
-    response =
-      GenServer.call(pid, message)
-      |> response_to_json()
+  # this needs to be rate limited
+  def handle_in({json, [opcode: :text]}, {pid, ip}) do
+    with {:allow, _} <- Hammer.check_rate("msg:#{ip}", 500, 10),
+         {:ok, map} <- Poison.decode(json),
+         {:ok, {message, id}} <- json_to_message(map) do
+      response =
+        GenServer.call(pid, message)
+        |> response_to_json()
 
-    str =
-      Poison.encode!(%{
-        id: id,
-        response: response
-      })
+      str =
+        Poison.encode!(%{
+          id: id,
+          response: response
+        })
 
-    {:push, {:text, str}, pid}
+      {:push, {:text, str}, {pid, ip}}
+    else
+      # any incorrect/invalid websocket messages will come from outside code
+      _ -> {:push, {:text, "Error"}, {pid, ip}}
+    end
   end
 
-  def init(id) do
+  def init({id, ip}) do
     case Registry.lookup(Nc.System.DocumentRegistry, id) do
       [{pid, _}] ->
-        {:ok, pid}
+        {:ok, {pid, ip}}
 
       [] ->
         {:stop, :normal, {1000, "Document Not Found"}, id}
     end
   end
 
-  def handle_info(message, pid) do
+  def handle_info(message, {pid, ip}) do
     case message do
       {:editor, editors} ->
-        {:push, {:text, Poison.encode!(%{type: :editor, editors: editors})}, pid}
+        {:push, {:text, Poison.encode!(%{type: :editor, editors: editors})}, {pid, ip}}
 
       _ ->
-        {:ok, pid}
+        {:ok, {pid, ip}}
     end
   end
 
-  def terminate(reason, pid) do
-    if reason == :remote do
-      GenServer.call(pid, :end)
-    end
+  def terminate(:remote, {pid, _ip}) do
+    GenServer.call(pid, :end)
   end
+
+  # need to have a matching clause for the rest of the terminate clause
+  def terminate(_, _), do: nil
 
   # I would much prefer to not have to do this manually, but there are not a lot of options at the moment
-  def json_to_message(json_string) do
-    map = Poison.decode!(json_string)
-
+  def json_to_message(map) do
     case map["message"] do
       "start" ->
-        {:start, map["id"]}
+        {:ok, {:start, map["id"]}}
 
       %{
         "type" => "push",
         "changes" => changes
       } ->
-        {{:push, Enum.map(changes, &map_to_change/1)}, map["id"]}
+        {:ok, {{:push, Enum.map(changes, &map_to_change/1)}, map["id"]}}
 
       %{
         "type" => "pull",
         "lastPulled" => last_pulled
       } ->
-        {{:pull, last_pulled}, map["id"]}
+        {:ok, {{:pull, last_pulled}, map["id"]}}
+
+      _ ->
+        {:error, "unrecognized message"}
     end
   end
 
   def map_to_change(map) do
     case map do
-      nil ->
-        nil
-
       %{
         "type" => "insert",
         "position" => position,
@@ -84,6 +92,9 @@ defmodule Nc.Workers.ClientHandler do
         "from" => from
       } ->
         {:delete, position, amount, from}
+
+      _ ->
+        nil
     end
   end
 

@@ -1,4 +1,8 @@
 defmodule Nc.Support.Helpers do
+  @moduledoc """
+  Helper functions for (defunct) tests
+  """
+
   alias Nc.Core.Sync
 
   def apply_change(string, change) do
@@ -14,6 +18,14 @@ defmodule Nc.Support.Helpers do
 
       nil ->
         string
+    end
+  end
+
+  def apply_change_named(str, change, to) do
+    if change == nil || elem(change, 3) == to do
+      str
+    else
+      apply_change(str, change)
     end
   end
 
@@ -35,17 +47,14 @@ defmodule Nc.Support.Helpers do
   end
 
   def apply_change_list(string, changes, to \\ nil) do
-    if to == nil do
-      Enum.reduce(changes, string, &apply_change(&2, &1))
-    else
-      Enum.reduce(changes, string, fn change, str ->
-        if change == nil || elem(change, 3) == to do
-          str
-        else
-          apply_change(str, change)
-        end
-      end)
-    end
+    reduction_function =
+      if to == nil do
+        &apply_change(&2, &1)
+      else
+        &apply_change_named(&2, &1, to)
+      end
+
+    Enum.reduce(changes, string, reduction_function)
   end
 
   def apply_and_clamp(string, changes) do

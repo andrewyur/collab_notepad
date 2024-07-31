@@ -51,7 +51,7 @@ defmodule Nc.Workers.Document do
       send(pid, {:editor, Enum.count(state.clients)})
     end)
 
-    if Enum.count(state.clients) == 0 do
+    if Enum.empty?(state.clients) do
       # 5 second time out after last client has left
       {:reply, :ok, state, 5000}
     else

@@ -40,11 +40,21 @@
 </svelte:head>
 
 <main>
-  <h1>collab_notepad</h1>
+  <h1>notepad_collab</h1>
   <div class="card">
     <input type="text" bind:value={name} />
     <button on:click={createNewDoc}>create</button>
   </div>
+
+  {#if Object.keys(documents).length > 0}
+    <p>active notes:</p>
+    <div>
+      {#each Object.keys(documents) as name}
+        <a href={`${serverUrl}/document/${documents[name]}`}>{name}</a>
+      {/each}
+    </div>
+  {/if}
+
   <p>
     This is an online demo for a text conflict resolution algorithm (Operational
     Transformation) I implemented. It can handle multiple clients, and pushing
@@ -58,18 +68,10 @@
     > readme
   </p>
   <p>
-    If you find a way to break it, or have any suggestions, please <a
+    If you find a way to break the algorithm (or the server), or have any
+    suggestions, please <a
       href="mailto:andy@yurovchak.net?subject=I LOVED your notepad collab app!"
       >email me</a
     >!
   </p>
-
-  {#if Object.keys(documents).length > 0}
-    <p>active notes:</p>
-    <div>
-      {#each Object.keys(documents) as name}
-        <a href={`${serverUrl}/document/${documents[name]}`}>{name}</a>
-      {/each}
-    </div>
-  {/if}
 </main>

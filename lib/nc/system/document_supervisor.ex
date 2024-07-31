@@ -1,4 +1,8 @@
 defmodule Nc.System.DocumentSupervisor do
+  @moduledoc """
+  Dynamic supervisor for starting documents
+  """
+
   use DynamicSupervisor
 
   def start_link(_arg) do

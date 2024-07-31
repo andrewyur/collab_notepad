@@ -27,7 +27,10 @@ defmodule MarkdownCollab.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:bandit, "~> 1.5"},
       {:poison, "~> 6.0"},
-      {:websock_adapter, "~> 0.5.6"}
+      {:websock_adapter, "~> 0.5.6"},
+      {:hammer, "~> 6.2"},
+      {:credo, "~> 1.7"},
+      {:remote_ip, "~> 1.2"}
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
   end
