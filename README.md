@@ -7,9 +7,7 @@ Using elixir & bandit for the back end, and svelte for the front end
 ## TODO
 
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
-- figure out how to host on a cloud provider
-- set up CI
-- buy the super-youtube.com domain, set up traefik
+- buy the super-youtube.com domain
 - optimize for scale
   - configure a load tester, and benchmark
   - test to see if all supervisors are working by crashing functions
