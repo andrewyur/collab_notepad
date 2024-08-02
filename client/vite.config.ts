@@ -27,6 +27,9 @@ export default defineConfig({
         document: "src/document/document.ts",
         home: "src/home/home.ts",
       },
+      output: {
+        dir: "../priv/static",
+      },
     },
   },
 });

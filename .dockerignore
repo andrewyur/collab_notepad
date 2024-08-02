@@ -1,0 +1,36 @@
+.git
+!.git/HEAD
+!.git/refs
+
+.hg
+
+# web client files
+client/node_modules
+client/.vscode
+
+# Common development/test artifacts
+**/cover/
+**/doc/
+**/test/
+**/tmp/
+**/.elixir_ls
+
+# Mix artifacts
+**/_build/
+**/deps/
+**/*.ez
+
+# Database
+*.db
+*.db-*
+
+# Generated on crash by the VM
+**/erl_crash.dump
+
+# Static artifacts - These should be fetched and built inside the Docker image
+apps/wind_world_web/assets/node_modules/
+apps/wind_world_web/priv/static/assets/
+apps/wind_world_web/priv/static/cache_manifest.json
+
+# My personal ignores
+tmpassets/

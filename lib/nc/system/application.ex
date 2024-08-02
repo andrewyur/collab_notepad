@@ -1,9 +1,8 @@
-defmodule Nc.System.Config do
-  @moduledoc """
-  Configuration options for various services, (should probably be moved to config.exs...)
-  """
+defmodule Nc.System.Application do
+  use Application
 
-  def start_system do
+  @impl Application
+  def start(_start_type, _start_args) do
     Supervisor.start_link(
       [
         Nc.System.DocumentRegistry,

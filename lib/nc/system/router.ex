@@ -17,11 +17,11 @@ defmodule Nc.System.Router do
   alias Nc.System.DocumentSupervisor
 
   use Plug.Router
-  use Plug.Debugger
+  # use Plug.Debugger
 
   plug(RemoteIp)
 
-  plug(Plug.Logger, log: :debug)
+  # plug(Plug.Logger, log: :debug)
 
   plug(:match)
 
@@ -31,14 +31,14 @@ defmodule Nc.System.Router do
     json_decoder: Poison
   )
 
-  plug(Plug.Static, at: "/", from: "client/dist")
+  plug(Plug.Static, at: "/", from: {:collab_notepad, "priv/static"})
 
   plug(:dispatch)
 
   get "/" do
     conn
     |> put_resp_content_type("text/html")
-    |> send_file(200, "client/dist/home.html")
+    |> send_file(200, "#{Application.app_dir(:collab_notepad, "priv")}/static/home.html")
     |> halt()
   end
 
@@ -132,7 +132,7 @@ defmodule Nc.System.Router do
   get "/document/:id" do
     conn
     |> put_resp_content_type("text/html")
-    |> send_file(200, "client/dist/document.html")
+    |> send_file(200, "#{Application.app_dir(:collab_notepad, "priv")}/static/document.html")
     |> halt()
   end
 
@@ -142,7 +142,7 @@ defmodule Nc.System.Router do
       with {:ok, conn} <-
              check_rate(conn, Hammer.check_rate("edit:#{inspect(conn.remote_ip)}", 500, 1)) do
         WebSockAdapter.upgrade(conn, Nc.Workers.ClientHandler, {id, inspect(conn.remote_ip)},
-          timeout: 10 * 60 * 1000
+          timeout: :infinity
         )
       end
 

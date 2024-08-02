@@ -41,14 +41,6 @@
         failed = "Reason unknown...";
     }
   });
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-  };
-
-  const goBack = () => {
-    window.location.href = import.meta.env.VITE_SERVER_URL;
-  };
 </script>
 
 <svelte:head>
@@ -58,8 +50,8 @@
 </svelte:head>
 
 <nav>
-  <button on:click={copyLink}>copy link</button>
-  <button on:click={goBack}>main page</button>
+  <a href={window.location.href} target="_blank">open again</a>
+  <a href={import.meta.env.VITE_SERVER_URL} target="_blank">main page</a>
 </nav>
 <main>
   {#if connected}
@@ -93,5 +85,30 @@
     margin-top: 0;
     font-size: small;
     margin-bottom: 30px;
+  }
+
+  a {
+    border-radius: 8px;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.25s;
+    text-decoration: none;
+    color: #213547;
+  }
+  a:hover {
+    border-color: #646cff;
+  }
+  a:focus,
+  a:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+  }
+
+  @media (prefers-color-scheme: light) {
+    a {
+      background-color: #f9f9f9;
+    }
   }
 </style>

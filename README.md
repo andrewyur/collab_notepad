@@ -6,16 +6,14 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
+- make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
+- figure out how to host on a cloud provider
+- set up CI
+- buy the super-youtube.com domain, set up traefik
 - optimize for scale
   - configure a load tester, and benchmark
   - test to see if all supervisors are working by crashing functions
   - figure out how to attach pheonix live dashboard to the document running in the cloud
-- make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
-- error logging
-- sort out running in production mode, and moving Nc.System.Config into config.exs
-- dockerize & set up CI
-- buy the super-youtube.com domain
-- figure out how to host on a cloud provider
 
 ## Resources
 
