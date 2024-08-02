@@ -91,4 +91,4 @@ COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/collab_notepa
 
 USER nobody
 
-CMD ["/app/bin/collab_notepad", "start_iex"]
+CMD ["/app/bin/collab_notepad", "start"]

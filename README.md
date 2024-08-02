@@ -6,6 +6,8 @@ Using elixir & bandit for the back end, and svelte for the front end
 
 ## TODO
 
+- get the container working on google cloud run
+  - make a demo project to figure out the issue, adding in features slowly
 - make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
 - buy the super-youtube.com domain
 - optimize for scale
@@ -43,3 +45,4 @@ Using elixir & bandit for the back end, and svelte for the front end
   - there have been so many significant changes and it would take a lot of work
   - the lsp is not showing errors properly, and so to check where the errors are i would have to run the tests every time i change something
   - just realized my use of the terms "note" and "document" to describe the place where the user writes things is horribly inconsistent (as well as my use of snake_case and CamelCase)
+  - getting this to run on a cloud provider is really sucking
