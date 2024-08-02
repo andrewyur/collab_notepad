@@ -12,7 +12,7 @@
     editors_value = value;
   });
 
-  const websocketUrl = `ws://${window.location.host}${window.location.pathname}/edit`;
+  const websocketUrl = `wss://${window.location.host}${window.location.pathname}/edit`;
   let websocket = new WebSocket(websocketUrl);
   let connected = false;
   let failed: string | null = null;
