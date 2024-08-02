@@ -51,7 +51,7 @@
 
 <nav>
   <a href={window.location.href} target="_blank">open again</a>
-  <a href={import.meta.env.VITE_SERVER_URL} target="_blank">main page</a>
+  <a href={window.location.origin} target="_blank">main page</a>
 </nav>
 <main>
   {#if connected}

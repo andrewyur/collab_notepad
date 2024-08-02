@@ -4,8 +4,6 @@
   let name = "";
   let documents: { [key: string]: string } = {};
 
-  const serverUrl = import.meta.env.VITE_SERVER_URL;
-
   let createNewDoc = async () => {
     // ideally we would perform some sort of input sanitization/validation here
     if (name.length == 0) {
@@ -15,7 +13,9 @@
 
     // send request to server to make a new document
     const querystring = new URLSearchParams({ name }).toString();
-    const response = await fetch(`${serverUrl}/new?${querystring}`);
+    const response = await fetch(
+      `${window.location.origin}/new?${querystring}`
+    );
 
     if (!response.ok) {
       alert("Sorry! there was an error creating a document");
@@ -25,11 +25,11 @@
     const documentId = (await response.json()).id;
 
     // redirect user to the url of the document
-    window.location.href = `${serverUrl}/document/${documentId}`;
+    window.location.href = `${window.location.origin}/document/${documentId}`;
   };
 
   onMount(async () => {
-    const response = await fetch(`${serverUrl}/names`);
+    const response = await fetch(`${window.location.origin}/names`);
     if (response.ok) {
       documents = await response.json();
     }
@@ -55,7 +55,9 @@
     <p id="links-header">active notes:</p>
     <div id="links">
       {#each Object.keys(documents) as name}
-        <a href={`${serverUrl}/document/${documents[name]}`}>{name}</a>
+        <a href={`${window.location.origin}/document/${documents[name]}`}
+          >{name}</a
+        >
       {/each}
     </div>
   {/if}
