@@ -17,7 +17,7 @@ defmodule Nc.System.Application do
   defp bandit_options do
     [
       plug: Nc.System.Router,
-      port: 4000
+      port: System.get_env("PORT", "4000")
     ]
   end
 end
