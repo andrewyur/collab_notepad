@@ -20,8 +20,6 @@ ARG DEBIAN_VERSION=bullseye-20240701-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
-ARG NODE_ENV=production
-
 FROM ${BUILDER_IMAGE} AS builder
 
 # install build dependencies
@@ -31,14 +29,18 @@ RUN apt-get update -y && apt-get install -y build-essential git npm curl \
 RUN npm install npm@latest -g && \
     npm install n -g && \
     n latest
-
+    
 # prepare build dir
 COPY client /app/client
 
 WORKDIR /app/client
 
 # install and compile the client code
-RUN npm i && NODE_ENV=${NODE_ENV} npm run deploy
+RUN npm i
+
+ARG NODE_ENV=production
+
+RUN npm run deploy
 
 WORKDIR /app
 

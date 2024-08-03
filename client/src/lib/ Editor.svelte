@@ -144,8 +144,8 @@
   const handleCheckbox = (e: MouseEvent) => {
     if ((e.target as HTMLInputElement).checked) {
       autoSyncHandle = setInterval(async () => {
-        idle = idle && (await pull());
-        idle = idle && (await push());
+        idle = (await pull()) && idle;
+        idle = (await push()) && idle;
       }, 500);
     } else {
       if (autoSyncHandle) {
