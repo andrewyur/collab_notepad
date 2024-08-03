@@ -38,7 +38,7 @@ COPY client /app/client
 WORKDIR /app/client
 
 # install and compile the client code
-RUN npm i && NODE_ENV={NODE_ENV} npm run deploy
+RUN npm i && NODE_ENV=${NODE_ENV} npm run deploy
 
 WORKDIR /app
 
