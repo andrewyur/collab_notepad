@@ -1,21 +1,23 @@
 # CollabNotepad
 
-Server for a collaborative realtime text editor using my own Operational Transformation algorithm & WebSocket
+Server for a realtime collaborative text editor using my own Operational Transformation algorithm
 
-Using elixir & bandit for the back end, and svelte for the front end
+Using elixir & bandit for the back end, and svelte & quill for the front end
 
-## TODO
+This server is not really optimized for scale, both because it would be hard to load test, and because I don't really expect this to be used frequently. However, I did make use of OTP's fault tolerance features to make sure the server can run without supervison.
 
-- make a ton of cool charts in the readme showing the supervision tree, process creation flow, message handling process, and my OT implementation
-- optimize for scale
-  - configure a load tester, and benchmark
-  - test to see if all supervisors are working by crashing functions
-  - figure out how to attach pheonix live dashboard to the document running in the cloud
+I have heard a good amount of horror stories about runaway cloud computing costs, so I did take some time to make sure that all connections have a time out, implementing rate limiting for costly services, and making sure that I used a hosting service that scales to zero.
+
+## Technical details
+
+The text resolution algorithm used to make sure changes from clients don't result in divergent end states, even in the event of slow connections, uses a technology known as [Operational Transformation](https://en.wikipedia.org/wiki/Operational_transformation). The specific algorithm I used is based off of the one described in [this paper](https://en.wikipedia.org/wiki/Operational_transformation), and is located in both the server and the client code.
+
+The client and server(aka. document process) communicate through websocket, with an intermediate process on the server side which acts as a message translator, and handler of the websocket connection. The process ids of document processes are kept in a registry, linked to their document ids, so all a process needs to know to send a message to a document process is the document id. 
+
+The document processes are supervised by a dynamic supervisor, which itsself is supervised by the application level supervisor, which also tracks the web server and the document process registry.
 
 ## Resources
 
-- <https://www.linkedin.com/pulse/design-google-docs-crdt-operational-transformation/>
-- <https://medium.com/coinmonks/operational-transformations-as-an-algorithm-for-automatic-conflict-resolution-3bf8920ea447>
 - <https://livebook.manning.com/book/elixir-in-action-third-edition/>
 - <https://samuelmullen.com/articles/elixir-processes-testing>
 - <https://dl.acm.org/doi/pdf/10.1145/215585.215706>
@@ -41,5 +43,5 @@ Using elixir & bandit for the back end, and svelte for the front end
   - I dont plan on touching the part of the code that the tests cover
   - there have been so many significant changes and it would take a lot of work
   - the lsp is not showing errors properly, and so to check where the errors are i would have to run the tests every time i change something
-  - just realized my use of the terms "note" and "document" to describe the place where the user writes things is horribly inconsistent (as well as my use of snake_case and CamelCase)
-  - getting this to run on a cloud provider is really sucking
+- just realized my use of the terms "note" and "document" to describe the place where the user writes things is horribly inconsistent (as well as my use of snake_case and CamelCase)
+- getting this to run on a cloud provider is really sucking
