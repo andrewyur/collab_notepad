@@ -142,7 +142,7 @@ defmodule Nc.System.Router do
       with {:ok, conn} <-
              check_rate(conn, Hammer.check_rate("edit:#{inspect(conn.remote_ip)}", 500, 1)) do
         WebSockAdapter.upgrade(conn, Nc.Workers.ClientHandler, {id, inspect(conn.remote_ip)},
-          timeout: :infinity
+          timeout: 60 * 10 * 1000
         )
       end
 

@@ -85,19 +85,22 @@
       uncondensed = new Delta();
     };
 
-    setInterval(() => {
-      if (idle) {
-        // this tomfoolery has to happen because providing a code to .close() does not set the close code for the CloseEvent...
+    setInterval(
+      () => {
+        if (idle) {
+          // this tomfoolery has to happen because providing a code to .close() does not set the close code for the CloseEvent...
 
-        messenger._reciever._websocket.dispatchEvent(
-          new CloseEvent("close", { code: 1002 })
-        );
+          messenger._reciever._websocket.dispatchEvent(
+            new CloseEvent("close", { code: 1002 })
+          );
 
-        messenger._reciever._websocket.close();
-      } else {
-        idle = true;
-      }
-    }, 1000 * 60);
+          messenger._reciever._websocket.close();
+        } else {
+          idle = true;
+        }
+      },
+      1000 * 60 * 5
+    );
 
     push = async (): Promise<boolean> => {
       condense_changes();
