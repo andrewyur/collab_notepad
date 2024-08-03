@@ -41,7 +41,7 @@
 </svelte:head>
 
 <main>
-  <h1>notepad_collab</h1>
+  <h1>collab_notepad</h1>
   <div class="card">
     <input
       type="text"

@@ -14,6 +14,7 @@
   let pending: Change[] = [];
   let unpushed = 0;
   let uncondensed = new Delta();
+  let idle = false;
 
   let autoSyncHandle: ReturnType<typeof setInterval> | null = null;
 
@@ -55,9 +56,9 @@
     return changes;
   };
 
-  let push = () => {};
+  let push = async () => false;
 
-  let pull = () => {};
+  let pull = async () => false;
 
   onMount(async () => {
     const quill = new Quill("#editor", {
@@ -84,18 +85,32 @@
       uncondensed = new Delta();
     };
 
-    push = async () => {
+    setInterval(() => {
+      if (idle) {
+        // this tomfoolery has to happen because providing a code to .close() does not set the close code for the CloseEvent...
+
+        messenger._reciever._websocket.dispatchEvent(
+          new CloseEvent("close", { code: 1002 })
+        );
+
+        messenger._reciever._websocket.close();
+      } else {
+        idle = true;
+      }
+    }, 1000 * 60);
+
+    push = async (): Promise<boolean> => {
       condense_changes();
 
       if (unpushed > 0) {
-        await messenger.sendPush(
-          pending.slice(-1 * unpushed, pending.length + 1)
-        );
+        messenger.sendPush(pending.slice(-1 * unpushed, pending.length + 1));
+        unpushed = 0;
+        return false;
       }
-      unpushed = 0;
+      return true;
     };
 
-    pull = async () => {
+    pull = async (): Promise<boolean> => {
       const newChanges = await messenger.sendPull();
 
       condense_changes();
@@ -118,14 +133,16 @@
             break;
         }
       });
+
+      return newChanges.length == 0;
     };
   });
 
   const handleCheckbox = (e: MouseEvent) => {
     if ((e.target as HTMLInputElement).checked) {
       autoSyncHandle = setInterval(async () => {
-        await pull();
-        await push();
+        idle = idle && (await pull());
+        idle = idle && (await push());
       }, 500);
     } else {
       if (autoSyncHandle) {

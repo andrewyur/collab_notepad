@@ -12,7 +12,7 @@
     editors_value = value;
   });
 
-  const websocketUrl = `wss://${window.location.host}${window.location.pathname}/edit`;
+  const websocketUrl = `${import.meta.env.PROD ? "wss" : "ws"}://${window.location.host}${window.location.pathname}/edit`;
   let websocket = new WebSocket(websocketUrl);
   let connected = false;
   let failed: string | null = null;
@@ -29,16 +29,16 @@
     switch (e.code) {
       // cannot figure out why the time out is throwing error code 1002, this is a workaround
       case 1002:
-        failed = "Connection timed out!";
+        failed ||= "You have been idle too long!";
         break;
       case 1000:
-        failed = "Document not found!";
+        failed ||= "Document not found!";
         break;
       case 1013:
-        failed = "You have been rate limited! Relax!";
+        failed ||= "You have been rate limited! Relax!";
         break;
       default:
-        failed = "Reason unknown...";
+        failed ||= "Reason unknown...";
     }
   });
 </script>
@@ -96,10 +96,8 @@
     cursor: pointer;
     transition: border-color 0.25s;
     text-decoration: none;
-    color: #213547;
-  }
-  a:hover {
-    border-color: #646cff;
+    background-color: #1a1a1a;
+    color: rgba(255, 255, 255, 0.87);
   }
   a:focus,
   a:focus-visible {
@@ -109,6 +107,7 @@
   @media (prefers-color-scheme: light) {
     a {
       background-color: #f9f9f9;
+      color: #213547;
     }
   }
 </style>
