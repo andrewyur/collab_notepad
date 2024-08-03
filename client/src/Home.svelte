@@ -63,10 +63,9 @@
   {/if}
 
   <p>
-    This is an online demo for a text conflict resolution algorithm, which is an
-    implementation of <a
+    This is an online demo for my text conflict resolution algorithm, which uses<a
       href="https://en.wikipedia.org/wiki/Operational_transformation"
-      >Operational Transform</a
+      >Operational Transformation</a
     >. It can handle multiple clients and pushing from a detached state (Git
     can't do that!), so create a note, open it in multiple tabs and do your best
     to mess it up.
