@@ -51,7 +51,7 @@
 
 <nav>
   <a href={window.location.href} target="_blank">open again</a>
-  <a href={window.location.origin} target="_blank">main page</a>
+  <a href={window.location.origin}>main page</a>
 </nav>
 <main>
   {#if connected}
