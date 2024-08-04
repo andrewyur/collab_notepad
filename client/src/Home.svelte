@@ -63,7 +63,7 @@
   {/if}
 
   <p>
-    This is an online demo for my text conflict resolution algorithm, which uses<a
+    This is an online demo for my text conflict resolution algorithm, which uses <a
       href="https://en.wikipedia.org/wiki/Operational_transformation"
       >Operational Transformation</a
     >. It can handle multiple clients and pushing from a detached state (Git
